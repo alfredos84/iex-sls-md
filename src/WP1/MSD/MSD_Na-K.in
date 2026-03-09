@@ -1,0 +1,139 @@
+# === Compile and run the code with:
+# === mpirun -np 48 lmp -in MSD_Na-K.in -var val_x 0.0 -var T_end 300
+
+# === Input file for simulations of soda-lime silica glass: 
+# === (75)SiO2, (15-x)Na2O, (x)K2O, (10)CaO
+
+
+# ==========================================================
+# Long NPT runs at multiple temperatures for MSD
+# For each T:
+#   1) Equilibration: 1 ns (no MSD)
+#   2) Production:    10 ns (MSD for Na and K)
+#
+# T = 683, 703, 723, 743, 773 K
+# dt = 0.002 ps (2 fs)  [metal units]
+# Ensemble: NPT, P = 1 bar (iso)
+# Potential settings are included from: in.BMP
+# Initial structure: structure.dat
+# ==========================================================
+
+################################################################################
+###--- INITIALIZATION ---###
+echo            both
+units           metal
+dimension       3
+boundary        p p p
+atom_style      charge
+atom_modify     map yes
+newton          on
+
+################################################################################
+###--- INPUT STRUCTURE ---###
+
+variable        x               equal ${val_x}      # Na/K ratio (parsed variable)
+variable        Tend            equal ${T_end}      # Final temperature in Kelvin (parsed variable)
+
+read_data       ../MELTQUENCH/Quenched_glass_Tfinal_${Tend}_x${x}.data
+
+################################################################################
+###--- INTERATOMIC POTENTIAL ---###
+include         ../BMP_files/bmp_SiO_CaNaK.mod
+neighbor        1.0 bin
+neigh_modify    delay 10 every 1 check yes
+
+# 0.002 ps = 2 fs (in metal units)
+variable        dt              equal 0.002     # Time step en ps
+timestep        0.002
+
+# ---------------- DEFINE Na / K GROUPS ----------------
+# IMPORTANT: set these atom types to match your structure.dat "Masses" / "Atoms" section.
+# Example: if Na is type 4 and K is type 5 in your structure.dat, then use:
+
+################################################################################
+# ###--- DEFINE GROUPS FOR SPECIES ---###
+# group Na type 4
+# group K  type 5
+
+# ---------------- RUN LENGTHS ----------------
+# 1 ns  = 1000 ps; steps = 1000 / 0.002 = 500,000
+# 10 ns = 10000 ps; steps = 10000 / 0.002 = 5,000,000
+variable        eq_ps     equal 1000.0
+variable        prod_ps   equal 10000.0
+variable        dt_ps     equal 0.002
+variable        eq_steps  equal 300 #floor(v_eq_ps/v_dt_ps)
+variable        pr_steps  equal 300 #floor(v_prod_ps/v_dt_ps)
+
+# ---------------- THERMO ----------------
+thermo          5000
+thermo_style    custom step temp press pe ke etotal vol density
+
+# ---------------- NPT SETTINGS ----------------
+# Pressure in metal units is bar
+variable        Pbar      equal 1.0
+
+# Damping constants (ps)
+# Common choices: Tdamp ~ 100*dt, Pdamp ~ 1000*dt (or larger)
+variable        Tdamp     equal 0.2
+variable        Pdamp     equal 2.0
+
+# ---------------- TEMPERATURE LOOP ----------------
+variable        thisT index 683 703 723 743 773
+label           loop_T
+
+    print "=================================================="
+    print " Running NPT at T = ${thisT} K, P = ${Pbar} bar"
+    print " Equil: ${eq_steps} steps (1 ns)"
+    print " Prod : ${pr_steps} steps (10 ns) + MSD(Na,K)"
+    print "=================================================="
+
+    # Fresh start per temperature
+    reset_timestep 0
+
+    # Initialize velocities at the target temperature
+    velocity    all create ${thisT} 4928459 mom yes rot no dist gaussian
+
+    # --- EQUILIBRATION (no MSD) ---
+    fix         npt all npt temp ${thisT} ${thisT} ${Tdamp} iso ${Pbar} ${Pbar} ${Pdamp}
+
+    # Optional equilibration trajectory
+    dump        eqtraj all custom 10000 eq_traj_${thisT}K.lammpstrj id type x y z xu yu zu
+    dump_modify eqtraj sort id
+
+    run         ${eq_steps}
+
+    undump      eqtraj
+
+    # Reset timestep so MSD starts at step 0 of production
+    reset_timestep 0
+
+    # --- PRODUCTION + MSD for Na and K ---
+    compute      msdNa Na msd com yes
+    compute      msdK  K  msd com yes
+
+    # Save MSD every 1000 steps (= 2 ps)
+    # Columns: step  msd_x  msd_y  msd_z  msd_tot
+    fix          msdNaAve all ave/time 1000 1 1000 c_msdNa[1] c_msdNa[2] c_msdNa[3] c_msdNa[4] file msd_Na_${thisT}K.dat
+    fix          msdKAve  all ave/time 1000 1 1000 c_msdK[1]  c_msdK[2]  c_msdK[3]  c_msdK[4] file msd_K_${thisT}K.dat
+
+    # Optional production trajectory (unwrapped coords are useful for diffusion/MSD)
+    dump         traj all custom 5000 traj_${thisT}K.lammpstrj id type x y z xu yu zu
+    dump_modify  traj sort id
+
+    run          ${pr_steps}
+
+    # --- Cleanup ---
+    unfix        npt
+    unfix        msdNaAve
+    unfix        msdKAve
+    uncompute    msdNa
+    uncompute    msdK
+    undump       traj
+
+    write_restart restart_${thisT}K
+    write_data    data_final_${thisT}K.dat
+
+next            thisT
+jump            SELF loop_T
+
+print "All temperature points completed successfully!"

@@ -1,0 +1,40 @@
+################################################################################
+###--- CREATE THE INITIAL RANDOM STRUCTURE ---###
+
+# Number of atoms according to composition
+# 75-SiO2, (15-x)-Na2O, 10-CaO, x-K2O
+variable        n_Si            equal round($(v_n_molecules*0.75))             # Si
+variable        n_O             equal round($(v_n_molecules*1.75))             # O
+variable        n_Ca            equal round($(0.10*v_n_molecules))             # Ca
+variable        n_Na            equal round($(0.02*(15-v_x)*v_n_molecules))    # Na
+variable        n_K             equal round($(0.02*v_x*v_n_molecules))         # Ka
+
+
+# Total number of atoms
+variable        n_atoms         equal $(v_n_Si + v_n_O + v_n_Ca + v_n_Na + v_n_K) 
+variable        density         equal ${target_density}   # g/cm³
+
+
+# Molar masses(u)
+variable        m_Si equal 	28.085   # Silicon mass (Si)
+variable        m_O  equal	15.999   # Oxigen mass (O)
+variable        m_Ca equal	40.078   # Calcium mass (Ca)
+variable        m_Na equal	22.990   # Sodium mass (Na)
+variable        m_K  equal	39.098   # Potassium mass (K)
+variable	    m_total equal $((v_m_Si*v_n_Si+v_m_O*v_n_O+v_m_Ca*v_n_Ca+v_m_Na*v_n_Na+v_m_K*v_n_K)/v_NAvog)
+
+
+# Volume and Box size (Å)
+variable        volume equal $((v_m_total / v_density)*1e24) # volume in A³
+variable        L_box equal $(1.01*v_volume^(1.0/3.0))
+
+region          simbox block 0 ${L_box} 0 ${L_box} 0 ${L_box} units box
+create_box      5 simbox
+
+
+# Place atoms randomly
+create_atoms  1 random ${n_Si}	12347 simbox overlap 2.0
+create_atoms  2 random ${n_O}	56786 simbox overlap 2.0
+create_atoms  3 random ${n_Ca}	23466 simbox overlap 2.0
+create_atoms  4 random ${n_Na}	67850 simbox overlap 2.0
+create_atoms  5 random ${n_K}	88853 simbox overlap 2.0

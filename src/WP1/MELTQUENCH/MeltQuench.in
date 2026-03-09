@@ -1,0 +1,101 @@
+# === Compile and run the code with:
+# === mpirun -np 48 lmp -in MeltQuench.in -var target_density 2.48 -var val_x 0.0 -var T_end 300
+
+# === Input file for simulations of soda-lime silica glass: 
+# === (75)SiO2, (15-x)Na2O, (x)K2O, (10)CaO
+
+################################################################################
+units           metal
+dimension       3
+boundary        p p p
+atom_style      charge
+
+# Log file
+log MeltQuenchGlass.lammps
+################################################################################
+###--- DEFINE IMPORTANT QUANTITIES ---###
+
+# Avogadro's number
+variable	NAvog	equal 6.022e23	
+
+# Parsed variables
+variable        x               equal ${val_x}       # Na/K ratio (parsed variable)
+
+# Variables
+variable        dt              equal 0.002     # Time step en ps
+variable        n_molecules     equal 7000      #  n° atoms = n° molecules * 2.9
+
+################################################################################
+###--- CREATE RANDOM STRUCTURE ---###
+include         RandomStructure.in
+
+################################################################################
+###--- INTERATOMIC POTENTIAL ---###
+include         ../BMP_files/bmp_SiO_CaNaK.mod
+neighbor        2.0 bin
+neigh_modify    delay 10 check yes
+
+################################################################################
+###--- SAVE INITIAL CONFIGURATION ---###
+write_data      Initial_random_structure.data
+
+################################################################################
+###--- SIMULATION ---###
+variable        Tend            equal ${T_end}  # Final temperature in Kelvin (parsed variable)
+variable        Tstart          equal 3000.0    # Initial temperature in Kelvin
+
+#=== Cooling rate, quenching steps and NPT steps
+variable        cooling_rate    equal 1.00      # in K/ps
+variable        quench_steps    equal round($((v_Tstart-v_Tend)/(v_dt*v_cooling_rate)))
+variable        npt_1           equal 50000     # 100 ps = 50000 steps at 0.002 ps/step
+variable        npt_2           equal 50000     # 100 ps = 50000 steps at 0.002 ps/step
+
+#=== Print on screen the initial information
+print "Si = $(v_n_Si), O = $(v_n_O), Ca = $(v_n_Ca) , Na = $(v_n_Na), K = $(v_n_K) atoms"
+print "Total atoms = ${n_atoms}"
+print "Length box = ${L_box}"
+print "Density = $(v_density) g/cm3"
+print "Cooling rate = $(v_cooling_rate) K/ps"
+print "Quenching steps = $(v_quench_steps)"
+
+
+thermo          1000
+thermo_style    custom step temp press pe etotal vol lx ly lz density
+
+reset_timestep  0
+min_style       cg
+minimize        1.0e-6 1.0e-8 1000 10000
+
+
+#=== Initialization of velocities at Tstart K
+velocity all create ${Tstart} 4928459 rot yes mom yes dist gaussian
+
+
+#=== Melt a 3000 K
+fix             MELT all npt temp ${Tstart} ${Tstart} $(100.0*dt) iso 0 0 $(1000.0*dt)
+run             ${npt_1}
+unfix           MELT
+
+
+# Quench: Tstart = 3000 K --->  Tend = 300 K
+fix             QUENCH all npt temp ${Tstart} ${Tend} $(100.0*dt) iso 0 0 $(1000.0*dt)
+run             ${quench_steps}
+unfix           QUENCH
+
+
+# Final relaxing at Tend = 300 K
+fix             RELAX all npt temp ${Tend} ${Tend} $(100.0*dt) iso 0 0 $(1000.0*dt)
+
+
+# Statistical average
+dump            FINALxtc all xtc 500 Quenched_glass_Tfinal_${Tend}_x${x}.xtc
+dump            FINALtrj all custom 500 Quenched_glass_Tfinal_${Tend}_x${x}.lammpstrj id type x y z
+dump_modify     FINALtrj element Si O Ca Na K sort id
+run             ${npt_2}
+
+unfix           RELAX
+
+
+################################################################################
+###--- SAVE OUTPUT POSITION ---###
+write_data Quenched_glass_Tfinal_${Tend}_x${x}.data nocoeff nofix
