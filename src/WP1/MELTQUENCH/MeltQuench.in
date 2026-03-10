@@ -10,8 +10,6 @@ dimension       3
 boundary        p p p
 atom_style      charge
 
-# Log file
-log MeltQuenchGlass.lammps
 ################################################################################
 ###--- DEFINE IMPORTANT QUANTITIES ---###
 
@@ -20,6 +18,9 @@ variable	NAvog	equal 6.022e23
 
 # Parsed variables
 variable        x               equal ${val_x}       # Na/K ratio (parsed variable)
+
+# Log file
+log             MeltQuenchGlass_x${x}_T${T_end}.lammps
 
 # Variables
 variable        dt              equal 0.002     # Time step en ps
