@@ -25,19 +25,6 @@ done
 
 
 ################################################################################
-###--- MEAN SQUARE DISPLACEMENT CALCULATIONS ---###
-
-cd ../MSD
-
-for ((i=0; i<${#x_values[@]}; i++)); do
-  x=${x_values[i]}
-  
-  mpirun -np 48 lmp -in MSD_Na-K.in -var val_x ${x} -var T_end ${t_final}
-  echo "  - MSD_Na-K.in simulation: x=${x}, t_final=${t_final}"
-done
-
-
-################################################################################
 ###--- ELASTIC PROPERTIES CALCULATIONS ---###
 
 cd ../YOUNG_MODULUS_STRAIN_STRESS
@@ -51,3 +38,17 @@ for ((i=0; i<${#x_values[@]}; i++)); do
   mpirun -np 48 lmp -in input_lammps_z.in -var val_x ${x} -var T_end ${t_final}
   echo "  - input_lammps_z.in simulation: x=${x}, t_final=${t_final}"
 done
+
+
+################################################################################
+###--- MEAN SQUARE DISPLACEMENT CALCULATIONS ---###
+
+# cd ../MSD
+
+# for ((i=0; i<${#x_values[@]}; i++)); do
+#   x=${x_values[i]}
+  
+#   mpirun -np 48 lmp -in MSD_Na-K.in -var val_x ${x} -var T_end ${t_final}
+#   echo "  - MSD_Na-K.in simulation: x=${x}, t_final=${t_final}"
+# done
+
