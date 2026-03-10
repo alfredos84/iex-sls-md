@@ -61,8 +61,8 @@ timestep        0.002
 variable        eq_ps     equal 1000.0
 variable        prod_ps   equal 10000.0
 variable        dt_ps     equal 0.002
-variable        eq_steps  equal 300 #floor(v_eq_ps/v_dt_ps)
-variable        pr_steps  equal 300 #floor(v_prod_ps/v_dt_ps)
+variable        eq_steps  equal floor(v_eq_ps/v_dt_ps)
+variable        pr_steps  equal floor(v_prod_ps/v_dt_ps)
 
 # ---------------- THERMO ----------------
 thermo          5000
