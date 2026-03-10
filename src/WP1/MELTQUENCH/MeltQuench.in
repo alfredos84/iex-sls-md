@@ -38,7 +38,7 @@ neigh_modify    delay 10 check yes
 
 ################################################################################
 ###--- SAVE INITIAL CONFIGURATION ---###
-write_data      Initial_random_structure.data
+write_data      Initial_random_structure_x${x}_T${T_end}.data
 
 ################################################################################
 ###--- SIMULATION ---###
@@ -66,6 +66,7 @@ thermo_style    custom step temp press pe etotal vol lx ly lz density
 reset_timestep  0
 min_style       cg
 minimize        1.0e-6 1.0e-8 1000 10000
+
 
 
 #=== Initialization of velocities at Tstart K
@@ -100,3 +101,4 @@ unfix           RELAX
 ################################################################################
 ###--- SAVE OUTPUT POSITION ---###
 write_data Quenched_glass_Tfinal_${Tend}_x${x}.data nocoeff nofix
+

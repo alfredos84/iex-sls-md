@@ -26,15 +26,15 @@ variable	    m_total equal $((v_m_Si*v_n_Si+v_m_O*v_n_O+v_m_Ca*v_n_Ca+v_m_Na*v_n
 
 # Volume and Box size (Å)
 variable        volume equal $((v_m_total / v_density)*1e24) # volume in A³
-variable        L_box equal $(1.01*v_volume^(1.0/3.0))
+variable        L_box equal $(v_volume^(1.0/3.0))
 
 region          simbox block 0 ${L_box} 0 ${L_box} 0 ${L_box} units box
 create_box      5 simbox
 
 
 # Place atoms randomly
-create_atoms  1 random ${n_Si}	12347 simbox overlap 2.0
-create_atoms  2 random ${n_O}	56786 simbox overlap 2.0
-create_atoms  3 random ${n_Ca}	23466 simbox overlap 2.0
-create_atoms  4 random ${n_Na}	67850 simbox overlap 2.0
-create_atoms  5 random ${n_K}	88853 simbox overlap 2.0
+create_atoms 1 random ${n_Si} 12347 simbox overlap 1.2 maxtry 200
+create_atoms 2 random ${n_O}  56786 simbox overlap 1.2 maxtry 200
+create_atoms 3 random ${n_Ca} 23466 simbox overlap 1.2 maxtry 200
+create_atoms 4 random ${n_Na} 67850 simbox overlap 1.2 maxtry 200
+create_atoms 5 random ${n_K}  88853 simbox overlap 1.2 maxtry 200
