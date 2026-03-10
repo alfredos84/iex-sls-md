@@ -42,7 +42,7 @@ done
 ################################################################################
 ###--- INTERATOMIC POTENTIAL ---###
 
-cd ../youngs_modulus_stress_strain
+cd ../YOUNG_MODULUS_STRAIN_STRESS
 
 for ((i=0; i<${#x_values[@]}; i++)); do
   x=${x_values[i]}
