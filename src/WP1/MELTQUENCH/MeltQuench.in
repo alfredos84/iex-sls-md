@@ -101,4 +101,3 @@ unfix           RELAX
 ################################################################################
 ###--- SAVE OUTPUT POSITION ---###
 write_data Quenched_glass_Tfinal_${Tend}_x${x}.data nocoeff nofix
-
