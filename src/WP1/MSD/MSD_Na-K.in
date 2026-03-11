@@ -77,6 +77,21 @@ variable        Pbar      equal 1.0
 variable        Tdamp     equal 0.2
 variable        Pdamp     equal 2.0
 
+# ---------------- PREHEATING TO FIRST MSD TEMPERATURE ----------------
+# Heating rate: 1 K/ps. Since dt = 0.002 ps, the number of steps equals
+# deltaT / (1 K/ps) / dt.
+variable        TstartMSD equal 683.0
+variable        heat_rate equal 1.0
+variable        ramp_ps   equal (v_TstartMSD-v_Tend)/v_heat_rate
+variable        steps_ramp equal ceil(v_ramp_ps/v_dt_ps)
+
+if "${Tend} < ${TstartMSD}" then &
+"print 'Preheating in NPT from ${Tend} K to ${TstartMSD} K at 1 K/ps (${steps_ramp} steps)'" &
+"fix rampNPT all npt temp ${Tend} ${TstartMSD} ${Tdamp} iso ${Pbar} ${Pbar} ${Pdamp}" &
+"run ${steps_ramp}" &
+"unfix rampNPT" &
+"reset_timestep 0"
+
 # ---------------- TEMPERATURE LOOP ----------------
 variable        thisT index 683 703 723 743 773
 label           loop_T
@@ -94,7 +109,7 @@ label           loop_T
     velocity    all create ${thisT} 4928459 mom yes rot no dist gaussian
 
     # --- EQUILIBRATION (no MSD) ---
-    fix         npt all npt temp ${thisT} ${thisT} ${Tdamp} iso ${Pbar} ${Pbar} ${Pdamp}
+    fix         equilNPT all npt temp ${thisT} ${thisT} ${Tdamp} iso ${Pbar} ${Pbar} ${Pdamp}
 
     # Optional equilibration trajectory
     dump        eqtraj all custom 10000 eq_traj_${thisT}K.lammpstrj id type x y z xu yu zu
@@ -123,7 +138,7 @@ label           loop_T
     run          ${pr_steps}
 
     # --- Cleanup ---
-    unfix        npt
+    unfix        equilNPT
     unfix        msdNaAve
     unfix        msdKAve
     uncompute    msdNa
