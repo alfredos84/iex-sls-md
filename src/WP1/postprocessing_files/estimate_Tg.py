@@ -11,7 +11,7 @@ plt.rcParams.update(
         "mathtext.fontset": "cm",
         "font.family": "serif",
         "axes.labelsize": fnt_size,
-        "legend.fontsize": 14,
+        "legend.fontsize": 12,
         "xtick.labelsize": fnt_size,
         "ytick.labelsize": fnt_size,
     }
@@ -41,10 +41,10 @@ for ax, x_value, exp_dens in zip(axes, X_VALUES, EXP_DENSITY):
         specific_volume[SKIP_POINTS:],
         marker=".",
         s=6,
-        label=f"x={x_value}",
+        label=rf"$({15-x_value})Na_2O/({x_value})K_2O$",
     )
     ax.grid(True, alpha=0.45)
-    ax.legend(loc="best", frameon=False)
+    ax.legend(loc="lower right", frameon=False)
     ax.set_box_aspect(1)
     ax.text(
         0.04,
