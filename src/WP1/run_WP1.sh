@@ -51,4 +51,3 @@ done
 #   mpirun -np 48 lmp -in MSD_Na-K.in -var val_x ${x} -var T_end ${t_final}
 #   echo "  - MSD_Na-K.in simulation: x=${x}, t_final=${t_final}"
 # done
-
