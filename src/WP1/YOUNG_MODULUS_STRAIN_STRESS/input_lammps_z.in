@@ -19,7 +19,7 @@ atom_style      charge
 atom_modify     map yes
 newton          on
 
-log input_z_${p_id}.lammps
+
 ################################################################################
 ###--- INPUT STRUCTURE ---###
 
@@ -28,6 +28,7 @@ variable        Tend            equal ${T_end}      # Final temperature in Kelvi
 
 read_data       ../MELTQUENCH/Quenched_glass_Tfinal_${Tend}_x${x}.data
 
+log input_z_${p_id}_T${Tend}_x${x}.lammps
 ################################################################################
 ###--- INTERATOMIC POTENTIAL ---###
 include         ../BMP_files/bmp_SiO_CaNaK.mod
@@ -56,4 +57,4 @@ unfix INTEGNVT
 unfix PRESSX
 
 
-write_data      data.final_z.${p_id}
+write_data      data.final_z.${p_id}_T${Tend}_x${x}
