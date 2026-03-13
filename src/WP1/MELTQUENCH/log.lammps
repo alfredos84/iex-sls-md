@@ -1,0 +1,29 @@
+LAMMPS (29 Aug 2024 - Update 1)
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread. (src/comm.cpp:98)
+  using 1 OpenMP thread(s) per MPI task
+# === Compile and run the code with:
+# === mpirun -np 48 lmp -in MeltQuench.in -var target_density 2.48 -var val_x 0.0 -var T_end 300
+
+# === Input file for simulations of soda-lime silica glass:
+# === (75)SiO2, (15-x)Na2O, (x)K2O, (10)CaO
+
+################################################################################
+units           metal
+dimension       3
+boundary        p p p
+atom_style      charge
+
+################################################################################
+###--- DEFINE IMPORTANT QUANTITIES ---###
+
+# Avogadro's number
+variable	NAvog	equal 6.022e23
+
+# Parsed variables
+variable        x               equal ${val_x}       # Na/K ratio (parsed variable)
+variable        x               equal 15       
+
+# Log file
+log             MeltQuenchGlass_x${x}_T${T_end}.lammps
+log             MeltQuenchGlass_x15_T${T_end}.lammps
+log             MeltQuenchGlass_x15_T300.lammps
