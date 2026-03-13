@@ -1,0 +1,60 @@
+# === Compile and run the code with:
+# === mpirun -np 48 lmp -in input_lammps_z.in -var val_x 0.0 -var T_end 300
+
+# === Input file for simulations of quenched and stabilized soda-lime silica glass: 
+# === (75)SiO2, (15-x)Na2O, (x)K2O, (10)CaO
+# === This file is for deformation along the z direction. 
+#For deformation along x and y, see input_lammps_x.in and input_lammps_y.in, respectively.
+
+
+#Initialization
+echo            both
+variable        p_id world   0 # 1 2 3 4
+
+units           metal
+dimension       3
+processors      * * *
+boundary        p p p
+atom_style      charge
+atom_modify     map yes
+newton          on
+
+
+################################################################################
+###--- INPUT STRUCTURE ---###
+
+variable        x               equal ${val_x}      # Na/K ratio (parsed variable)
+variable        Tend            equal ${T_end}      # Final temperature in Kelvin (parsed variable)
+
+read_data       ../MELTQUENCH/Quenched_glass_Tfinal_${Tend}_x${x}.data
+
+log input_z_${p_id}_T${Tend}_x${x}.lammps
+################################################################################
+###--- INTERATOMIC POTENTIAL ---###
+include         ../BMP_files/bmp_SiO_CaNaK.mod
+neighbor        1.0  bin
+
+compute totalpressure all  pressure thermo_temp
+
+################################################################################
+###--- THERMAL PROPERTIES OUTPUT ---###
+thermo          100
+thermo_style    custom step etotal temp pe press pxx pyy pzz vol lx ly lz
+
+timestep        0.001
+variable        out_freq equal 50000
+variable        out_freq2 equal 50000
+variable        strain equal 0.01
+
+restart         ${out_freq} restart_*
+
+fix DEFORMATION all deform 1 z erate ${strain} remap x
+fix INTEGNVT all nvt temp ${T_end} ${T_end} $(25.0*dt)  # Integrazione temporale
+fix PRESSX all press/berendsen y 0 0 100 x 0 0 100
+run 50000
+unfix DEFORMATION
+unfix INTEGNVT
+unfix PRESSX
+
+
+write_data      data.final_z.${p_id}_T${Tend}_x${x}
