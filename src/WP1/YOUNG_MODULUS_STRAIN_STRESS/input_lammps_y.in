@@ -8,7 +8,8 @@
 
 #Initialization
 echo            both
-variable        p_id world   0 # 1 2 3 4
+variable        p_id world   0 1 2 3 4 5
+variable        seed world   32345 32345 32345 32345 32345 32345
 
 units           metal
 dimension       3
@@ -26,6 +27,7 @@ variable        x               equal ${val_x}      # Na/K ratio (parsed variabl
 variable        Tend            equal ${T_end}      # Final temperature in Kelvin (parsed variable)
 
 read_data       ../MELTQUENCH/Quenched_glass_Tfinal_${Tend}_x${x}.data
+velocity        all create ${T_end} ${seed} mom yes rot no dist gaussian
 
 log input_y_${p_id}_T${Tend}_x${x}.lammps
 ################################################################################
