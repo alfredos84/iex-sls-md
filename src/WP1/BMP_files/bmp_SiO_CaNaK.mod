@@ -33,9 +33,9 @@ pair_coeff * * coul/dsf
 # pair_coeff    *    *           table "./Table_None.dat"         NONE  ${rvdw}
 pair_coeff    1    2           table ../BMP_files/Table_PMMCS-Si-O.dat      albe  ${rvdw}
 pair_coeff    2    2           table ../BMP_files/Table_PMMCS-O-O.dat       albe  ${rvdw}
-pair_coeff    3    2           table ../BMP_files/Table_PMMCS-Ca-O.dat      albe  ${rvdw}
-pair_coeff    4    2           table ../BMP_files/Table_PMMCS-Na-O.dat      albe  ${rvdw}
-pair_coeff    5    2           table ../BMP_files/Table_BMP-K-O.dat         albe  ${rvdw}
+pair_coeff    2    3           table ../BMP_files/Table_PMMCS-Ca-O.dat      albe  ${rvdw}
+pair_coeff    2    4           table ../BMP_files/Table_PMMCS-Na-O.dat      albe  ${rvdw}
+pair_coeff    2    5           table ../BMP_files/Table_BMP-K-O.dat         albe  ${rvdw}
 
 # buckingham only for Si, Al
 pair_coeff    1    1           buck  7.093669 0.975598 0.0
