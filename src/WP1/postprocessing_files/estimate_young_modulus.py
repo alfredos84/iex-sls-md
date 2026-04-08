@@ -31,7 +31,7 @@ PID_VALUES = [0, 1, 2, 3, 4, 5]
 
 # LAMMPS units metal -> pressure in bar. 1 bar = 1e-4 GPa.
 BAR_TO_GPA = 1.0e-4
-FIT_EPS_MAX = 0.02
+FIT_EPS_MAX = 0.05
 
 
 def compute_strain_stress(log_path: Path, length_col: str, stress_col: str):
@@ -223,7 +223,7 @@ def main():
     for j in range(len(X_VALUES), len(axes_flat)):
         axes_flat[j].axis("off")
 
-    fig_ss.suptitle(rf"Stress-Strain por composicion ($\varepsilon \leq {FIT_EPS_MAX:.2f}$ para ajuste de E)")
+    fig_ss.suptitle(rf"Stress-Strain per composition")
     fig_ss.savefig("estimate_young_strain_stress_grid_2x10.pdf", bbox_inches="tight")
     fig_ss.savefig("estimate_young_strain_stress_grid_2x10.png", dpi=400, bbox_inches="tight")
 
@@ -245,7 +245,7 @@ def main():
         y_std=young_std,
         color="#1f77b4",
         ylabel="Young modulus (GPa)",
-        title="Young",
+        title=rf"Young ($\varepsilon \leq {FIT_EPS_MAX:.2f}$ for fitting)",
     )
     linear_fit_with_band(
         ax=axes_props[0, 1],
