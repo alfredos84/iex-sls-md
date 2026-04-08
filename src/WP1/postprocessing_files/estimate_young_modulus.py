@@ -27,6 +27,7 @@ AXIS_CONFIG = {
     "z": {"length_col": "Lz", "stress_col": "Pzz", "color": "#2ca02c"},
 }
 X_VALUES = [0, 1, 2, 3, 4, 5, 6, 9, 12, 15]
+PID_VALUES = [0, 1, 2, 3, 4, 5]
 
 # LAMMPS units metal -> pressure in bar. 1 bar = 1e-4 GPa.
 BAR_TO_GPA = 1.0e-4
@@ -125,40 +126,66 @@ def main():
 
     for i, x_val in enumerate(X_VALUES):
         ax_panel = axes_flat[i]
-        young_by_axis = {}
-        poisson_by_axis = {}
+        young_by_axis_mean = {}
+        poisson_by_axis_mean = {}
 
         for axis_name, cfg in AXIS_CONFIG.items():
-            filename = f"input_{axis_name}_0_T300_x{x_val}.lammps"
-            log_path = BASE_DIR / filename
-            if not log_path.exists():
-                raise FileNotFoundError(f"No existe el archivo: {log_path}")
+            young_pid = []
+            poisson_pid = []
+            strain_pid = []
+            stress_pid = []
 
-            strain, stress_gpa, _ = compute_strain_stress(log_path, cfg["length_col"], cfg["stress_col"])
-            young, _, _, _ = linear_fit_modulus(strain, stress_gpa, FIT_EPS_MAX)
-            young_by_axis[axis_name] = young
+            for pid in PID_VALUES:
+                filename = f"input_{axis_name}_{pid}_T300_x{x_val}.lammps"
+                log_path = BASE_DIR / filename
+                if not log_path.exists():
+                    raise FileNotFoundError(f"No existe el archivo: {log_path}")
 
-            strains_all = compute_all_strains(log_path)
-            axial = strains_all[axis_name]
-            transverse_axes = [ax for ax in ["x", "y", "z"] if ax != axis_name]
-            nu_trans = []
-            for t_axis in transverse_axes:
-                slope_trans, _ = linear_fit_slope(axial, strains_all[t_axis], FIT_EPS_MAX)
-                nu_trans.append(-slope_trans)
-            poisson_by_axis[axis_name] = float(np.mean(nu_trans))
+                strain, stress_gpa, _ = compute_strain_stress(log_path, cfg["length_col"], cfg["stress_col"])
+                young, _, _, _ = linear_fit_modulus(strain, stress_gpa, FIT_EPS_MAX)
+                young_pid.append(young)
+                strain_pid.append(strain)
+                stress_pid.append(stress_gpa)
 
-            ax_panel.plot(
-                strain,
-                stress_gpa,
-                "-",
-                lw=1.25,
-                color=cfg["color"],
-                alpha=0.9,
-                label=axis_name.upper(),
-            )
+                strains_all = compute_all_strains(log_path)
+                axial = strains_all[axis_name]
+                transverse_axes = [ax for ax in ["x", "y", "z"] if ax != axis_name]
+                nu_trans = []
+                for t_axis in transverse_axes:
+                    slope_trans, _ = linear_fit_slope(axial, strains_all[t_axis], FIT_EPS_MAX)
+                    nu_trans.append(-slope_trans)
+                poisson_pid.append(float(np.mean(nu_trans)))
 
-        young_values = np.asarray([young_by_axis[ax] for ax in ["x", "y", "z"]], dtype=float)
-        poisson_values = np.asarray([poisson_by_axis[ax] for ax in ["x", "y", "z"]], dtype=float)
+            young_by_axis_mean[axis_name] = float(np.mean(young_pid))
+            poisson_by_axis_mean[axis_name] = float(np.mean(poisson_pid))
+
+            first_shape = strain_pid[0].shape
+            if all(arr.shape == first_shape for arr in strain_pid) and all(arr.shape == first_shape for arr in stress_pid):
+                strain_avg = np.mean(np.stack(strain_pid, axis=0), axis=0)
+                stress_avg = np.mean(np.stack(stress_pid, axis=0), axis=0)
+                ax_panel.plot(
+                    strain_avg,
+                    stress_avg,
+                    "-",
+                    lw=1.25,
+                    color=cfg["color"],
+                    alpha=0.9,
+                    label=axis_name.upper(),
+                )
+            else:
+                for strain_i, stress_i in zip(strain_pid, stress_pid):
+                    ax_panel.plot(
+                        strain_i,
+                        stress_i,
+                        "-",
+                        lw=1.0,
+                        color=cfg["color"],
+                        alpha=0.25,
+                    )
+                ax_panel.plot([], [], "-", lw=1.25, color=cfg["color"], alpha=0.9, label=axis_name.upper())
+
+        young_values = np.asarray([young_by_axis_mean[ax] for ax in ["x", "y", "z"]], dtype=float)
+        poisson_values = np.asarray([poisson_by_axis_mean[ax] for ax in ["x", "y", "z"]], dtype=float)
 
         young_mean.append(float(np.mean(young_values)))
         young_std.append(float(np.std(young_values)))
@@ -168,8 +195,8 @@ def main():
         bulk_values = []
         shear_values = []
         for axis_name in ["x", "y", "z"]:
-            e_i = young_by_axis[axis_name]
-            nu_i = poisson_by_axis[axis_name]
+            e_i = young_by_axis_mean[axis_name]
+            nu_i = poisson_by_axis_mean[axis_name]
 
             den_k = 3.0 * (1.0 - 2.0 * nu_i)
             den_g = 2.0 * (1.0 + nu_i)
