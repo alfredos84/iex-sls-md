@@ -1,0 +1,131 @@
+# STAGE1_MELTQUENCH — 75SiO2.(25-x)Na2O.xK2O  (5000 oxide units, PMMCS rc8p0)
+#
+# Protocol (Wang2018 + restart at 723K for future IEX):
+#   1. Build random structure (n_molecules=5000)
+#   2. CG minimization
+#   3. NVT 3000K — 10 ps
+#   4. NPT 3000K — 100 ps (relax density) → write_restart liquid
+#   5. NPT quench 3000→723K at 1 K/ps (2277 ps)
+#      → write_restart + write_data at 723K (IEX starting point, no stop)
+#   6. NPT quench 723→300K at 1 K/ps (423 ps)
+#   7. NPT 300K — 100 ps (relaxation)
+#   8. NVT 300K — 100 ps + dump → write_data 300K
+#
+# Total: ~3 010 000 steps
+#
+# Required command-line variables (-var):
+#   val_x           composition index (0,1,3,6,9,12,15)
+#   val_r           replica index (1,2,3)
+#   target_density  initial density estimate (g/cm³)
+#   potfile         path to PMMCS .mod file
+
+echo            both
+units           metal
+dimension       3
+boundary        p p p
+atom_style      charge
+atom_modify     map yes
+newton          on
+
+variable        x        equal ${val_x}
+variable        r        equal ${val_r}
+variable        density0 equal ${target_density}
+variable        dt       equal 0.001
+
+variable        seed_Si  equal 12347+(v_r-1)*1000
+variable        seed_O   equal 56786+(v_r-1)*1000
+variable        seed_Ca  equal 23466+(v_r-1)*1000
+variable        seed_Na  equal 67850+(v_r-1)*1000
+variable        seed_K   equal 88853+(v_r-1)*1000
+variable        seed_vel equal  4928+(v_r-1)*1000
+
+variable        dump_300 equal round(10.0/v_dt)    # every 10 ps at 300 K
+
+shell mkdir -p data/asmelted_723K data/asmelted_300K logs trajectories restarts
+
+log             logs/stage1_x${x}_r${r}_PMMCS_rc8p0.lammps
+
+include         RandomStructure.in
+include         ${potfile}
+
+neighbor        2.0 bin
+neigh_modify    delay 0 check yes every 1
+
+timestep        ${dt}
+thermo          10000
+thermo_style    custom step time temp press pe etotal vol density
+thermo_modify   norm no
+
+################################################################################
+# 1. Minimization
+################################################################################
+
+min_style       cg
+min_modify      dmax 0.1 line quadratic
+minimize        0.0 1.0e-6 5000 50000
+reset_timestep  0
+
+################################################################################
+# 2. NVT melt: 10 ps at 3000 K
+################################################################################
+
+velocity        all create 3000.0 ${seed_vel} rot yes mom yes dist gaussian
+fix             NVT_MELT all nvt temp 3000.0 3000.0 0.1
+run             10000
+unfix           NVT_MELT
+
+################################################################################
+# 3. NPT melt: 100 ps at 3000 K (relax density)
+################################################################################
+
+fix             NPT_MELT all npt temp 3000.0 3000.0 0.1 iso 0.0 0.0 1.0
+run             100000
+unfix           NPT_MELT
+
+write_restart   restarts/restart_3000K_x${x}_r${r}_PMMCS_rc8p0
+
+################################################################################
+# 4. NPT quench: 3000→723 K at 1 K/ps (2277000 steps)
+################################################################################
+
+fix             NPT_Q1 all npt temp 3000.0 723.0 0.1 iso 0.0 0.0 1.0
+run             2277000
+unfix           NPT_Q1
+
+# Save 723K snapshot for future IEX (no stop, no equilibration here)
+write_restart   restarts/restart_723K_x${x}_r${r}_PMMCS_rc8p0
+write_data      data/asmelted_723K/AsMelted_723K_x${x}_r${r}_PMMCS_rc8p0.data nocoeff nofix
+print "STAGE1: saved 723K snapshot for IEX — x=${x} r=${r}"
+
+################################################################################
+# 5. NPT quench: 723→300 K at 1 K/ps (423000 steps)
+################################################################################
+
+fix             NPT_Q2 all npt temp 723.0 300.0 0.1 iso 0.0 0.0 1.0
+run             423000
+unfix           NPT_Q2
+
+################################################################################
+# 6. NPT relaxation: 100 ps at 300 K
+################################################################################
+
+fix             NPT_EQ300 all npt temp 300.0 300.0 0.1 iso 0.0 0.0 1.0
+run             100000
+unfix           NPT_EQ300
+
+################################################################################
+# 7. NVT statistical average: 100 ps at 300 K — save trajectory and data
+################################################################################
+
+dump            STAT all custom ${dump_300} trajectories/AsMelted_300K_x${x}_r${r}_PMMCS_rc8p0.lammpstrj &
+                id type q x y z
+dump_modify     STAT sort id element Si O Ca Na K first yes
+
+fix             NVT_STAT all nvt temp 300.0 300.0 0.1
+run             100000
+unfix           NVT_STAT
+undump          STAT
+
+write_data      data/asmelted_300K/AsMelted_300K_x${x}_r${r}_PMMCS_rc8p0.data nocoeff nofix
+
+print "STAGE1 done: x=${x} r=${r}  PMMCS rc8p0 — 723K restart + 300K data written."

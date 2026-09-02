@@ -1,43 +1,52 @@
 # IEX_SLS — .gitignore
-# Exclude heavy simulation data and generated intermediate files
+# Patterns with **/ match at any directory depth
 
 # Python cache
-__pycache__/
+**/__pycache__/
 *.pyc
 *.pyo
 
-# RINGS code (binary, not ours)
+# RINGS software (binary, not ours)
 rings-code-v1.3.5/
 
-# Cluster job logs (auto-generated, not needed)
-cluster_logs/
+# Cluster job logs (auto-generated)
+**/cluster_logs/
 
-# LAMMPS trajectory files (huge — GB each)
+# LAMMPS trajectory files (GB each)
 *.lammpstrj
 *.lammpsdump
 
-# LAMMPS output data files (large binary/text)
-STAGE*/data/
-STAGE*/trajectories/
+# LAMMPS simulation output directories inside STAGE*
+**/STAGE*/data/
+**/STAGE*/trajectories/
+**/STAGE*/logs/
+**/STAGE*/restarts/
+**/STAGE*/results/
+**/test_run/
 
-# LAMMPS log files (verbose, regenerable)
-STAGE*/logs/
+# RINGS computed data (thousands of files per composition)
+**/GR_CN_RINGS/AM_x*/
+**/GR_CN_RINGS/AM300K_x*/
+**/GR_CN_RINGS/IEX1_x*/
+**/GR_CN_RINGS/IEX2_x*/
+**/GR_CN_RINGS/REIEX1_x*/
+**/GR_CN_RINGS/REIEX2_x*/
+
+# LAMMPS log files
 *.lammps
+log.lammps
 
-# RINGS intermediate data (thousands of small files per composition)
-RESULTS/GR_CN_RINGS/AM_x*/
-RESULTS/GR_CN_RINGS/IEX2_x*/
-RESULTS/GR_CN_RINGS/REIEX2_x*/
-RESULTS/GR_CN_RINGS/AM300K_x*/
-RESULTS/BOND_ANGLE_DIST/data/
-
-# Grace/xmgrace files (not standard cross-platform)
+# Grace/xmgrace
 *.agr
 
-# Small test directory
-1500_atoms/
+# Bond angle per-composition data (regenerable)
+**/BOND_ANGLE_DIST/data/
+**/BOND_ANGLE_DIST/bonds/
 
-# Misc
+# Test and misc heavy directories
+1500_atoms/
 youngs_modulus_stress_strain/
+
+# Compiler artifacts
 *.o
 *.err

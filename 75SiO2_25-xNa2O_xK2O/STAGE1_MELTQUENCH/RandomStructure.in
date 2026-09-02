@@ -1,0 +1,35 @@
+# RandomStructure.in — 75SiO2.(25-x)Na2O.xK2O  with n_molecules=5000
+#
+# Required variables (set in the calling script before include):
+#   x           composition index (0,1,3,6,9,12,15)
+#   density0    target density (g/cm3)
+#   seed_Si, seed_O, seed_Ca, seed_Na, seed_K   create_atoms seeds
+#
+# Atom type map: Si=1, O=2, Ca=3, Na=4, K=5
+
+variable n_molecules equal 5000
+
+variable n_Si  equal round(v_n_molecules*0.75)
+variable n_O   equal round(v_n_molecules*1.75)
+variable n_Ca  equal 0                              # no Ca in this system
+variable n_Na  equal round(0.02*(25.0-v_x)*v_n_molecules)
+variable n_K   equal round(0.02*v_x*v_n_molecules)
+variable n_atoms equal v_n_Si+v_n_O+v_n_Ca+v_n_Na+v_n_K
+
+variable m_Si  equal 28.086
+variable m_O   equal 15.9994
+variable m_Ca  equal 40.078
+variable m_Na  equal 22.990
+variable m_K   equal 39.098
+variable NAvog equal 6.02214076e23
+variable mass_total equal (v_m_Si*v_n_Si+v_m_O*v_n_O+v_m_Ca*v_n_Ca+v_m_Na*v_n_Na+v_m_K*v_n_K)/v_NAvog
+variable volume0 equal (v_mass_total/v_density0)*1.0e24
+variable L_box   equal v_volume0^(1.0/3.0)
+
+region  simbox block 0 ${L_box} 0 ${L_box} 0 ${L_box} units box
+create_box 5 simbox
+create_atoms 1 random ${n_Si} ${seed_Si} simbox overlap 1.2 maxtry 300
+create_atoms 2 random ${n_O}  ${seed_O}  simbox overlap 1.2 maxtry 300
+create_atoms 3 random ${n_Ca} ${seed_Ca} simbox overlap 1.2 maxtry 300
+create_atoms 4 random ${n_Na} ${seed_Na} simbox overlap 1.2 maxtry 300
+create_atoms 5 random ${n_K}  ${seed_K}  simbox overlap 1.2 maxtry 300

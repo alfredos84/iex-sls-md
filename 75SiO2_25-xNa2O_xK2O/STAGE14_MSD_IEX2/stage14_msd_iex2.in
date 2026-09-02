@@ -1,0 +1,128 @@
+# STAGE14 — PMMCS rc8p0 — MSD K vs Temperature for Arrhenius (IEX Proto2)
+# System: 75SiO2·(15-xp)Na2O·xpK2O·10CaO → fully exchanged: 75SiO2·0Na2O·15K2O·10CaO
+#         (5000 oxide units, metal units)
+#
+# Command-line variables:
+#   val_x       x_parent (0,1,3,6,9,12)
+#   val_r       replica (1,2,3)
+#   potfile     path to PMMCS_pedone_rc8p0.mod
+#   datafile    path to IOX2_723K_xp${x}_r${r}_PMMCS_rc8p0.data
+#
+# Protocol per temperature (T = 723, 800, 1000, 1200, 1400 K):
+#   1) Heat NPT prevT → T at 1 K/ps  (0 steps for T=723, input already at 723 K)
+#   2) Equilibrate NPT at T: 1 ns (no MSD)
+#   3) Production NPT at T: 4 ns (MSD K, every 2 ps)
+#
+# dt = 0.002 ps (2 fs)  |  NPT iso P = 1 bar
+# Na group is always empty in IEX2 (all Na→K exchanged); only K MSD is computed.
+
+################################################################################
+###--- INITIALIZATION ---###
+
+echo            both
+units           metal
+dimension       3
+boundary        p p p
+atom_style      charge
+atom_modify     map yes
+newton          on
+
+################################################################################
+###--- INPUT STRUCTURE (IEX2 glass at 723 K) ---###
+
+variable        x   equal ${val_x}
+variable        r   equal ${val_r}
+
+read_data       ${datafile}
+log             logs/stage14_x${x}_r${r}_PMMCS_rc8p0.lammps
+
+################################################################################
+###--- INTERATOMIC POTENTIAL ---###
+
+include         ${potfile}
+neighbor        2.0 bin
+neigh_modify    delay 0 every 1 check yes
+
+################################################################################
+###--- GROUPS ---###
+# Atom types: Si=1  O=2  Ca=3  Na=4  K=5
+# IEX2: all Na were replaced by K → Na group is always empty.
+
+group Na type 4
+group K  type 5
+
+################################################################################
+###--- TIME STEP & THERMO ---###
+
+timestep        0.002
+
+thermo          5000
+thermo_style    custom step time temp press pe ke etotal vol density
+thermo_modify   norm no
+
+################################################################################
+###--- NPT SETTINGS ---###
+
+variable Pbar  equal 1.0
+variable Tdamp equal 0.2
+variable Pdamp equal 2.0
+
+variable dt_ps    equal 0.002
+variable eq_ps    equal 1000.0                       # 1 ns equilibration
+variable prod_ps  equal 4000.0                       # 4 ns production
+variable eq_steps equal floor(v_eq_ps/v_dt_ps)      # 500 000
+variable pr_steps equal floor(v_prod_ps/v_dt_ps)    # 2 000 000
+
+################################################################################
+###--- TEMPERATURE LOOP ---###
+# prevT = 723 K: input is already at 723 K, so ramp for T=723 has 0 steps.
+
+variable thisT index 723 800 1000 1200 1400
+variable prevT equal 723.0
+
+label loop_T
+
+    print "=================================================="
+    print " STAGE14 IEX2: x=${x} r=${r}  T=${thisT} K"
+    print " Heat from ${prevT} K to ${thisT} K at 1 K/ps"
+    print " Equil: ${eq_steps} steps (1 ns)"
+    print " Prod : ${pr_steps} steps (4 ns)"
+    print "=================================================="
+
+    reset_timestep 0
+
+    # ── Heating ramp: prevT → thisT at 1 K/ps ──────────────────────────────
+    # ramp_steps = 0 on the first iteration (723→723); run 0 is valid in LAMMPS.
+    variable ramp_steps equal ceil((${thisT}-${prevT})/(1.0*v_dt_ps))
+    fix rampNPT all npt temp ${prevT} ${thisT} ${Tdamp} iso ${Pbar} ${Pbar} ${Pdamp}
+    run ${ramp_steps}
+    unfix rampNPT
+    reset_timestep 0
+
+    # ── Equilibration (no MSD) ──────────────────────────────────────────────
+    fix eqNPT all npt temp ${thisT} ${thisT} ${Tdamp} iso ${Pbar} ${Pbar} ${Pdamp}
+    run ${eq_steps}
+    unfix eqNPT
+    reset_timestep 0
+
+    # ── Production + MSD ───────────────────────────────────────────────────
+    compute msdK  K  msd com yes
+    fix msdKOut all ave/time 1000 1 1000 &
+        c_msdK[1] c_msdK[2] c_msdK[3] c_msdK[4] &
+        file data/msd_K_${thisT}K_x${x}_r${r}.dat
+
+    fix prodNPT all npt temp ${thisT} ${thisT} ${Tdamp} iso ${Pbar} ${Pbar} ${Pdamp}
+    run ${pr_steps}
+
+    unfix prodNPT
+    unfix msdKOut
+    uncompute msdK
+
+    variable prevT equal ${thisT}
+
+    write_restart data/restart_${thisT}K_x${x}_r${r}
+
+next thisT
+jump SELF loop_T
+
+print "STAGE14 IEX2 complete: x=${x} r=${r}"
