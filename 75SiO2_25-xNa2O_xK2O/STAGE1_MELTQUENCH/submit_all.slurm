@@ -8,8 +8,8 @@
 #SBATCH --output=../cluster_logs/%x_%A_%a.out
 #SBATCH --error=../cluster_logs/%x_%A_%a.err
 
-# TEST_GLASS_PMMCS — STAGE1 Melt-quench (5000 oxide units, PMMCS rc8p0)
-# x = 0,1,3,6,9,12,15 — 7 compositions x 3 replicas = 21 tasks (array 0-20)
+# 75SiO2.(25-x)Na2O.xK2O — STAGE1 Melt-quench (5000 oxide units, PMMCS rc8p0, no Ca)
+# x = 0,1,3,6,9,12,15,20,25 — 9 compositions x 3 replicas = 27 tasks (array 0-26)
 # Layout: task i → X_VALUES[i/3], replica (i%3)+1
 
 module load foss/2021b
@@ -19,17 +19,16 @@ POTFILE="../IPs/PMMCS/PMMCS_pedone_rc8p0.mod"
 
 X_VALUES=(0 1 3 6 9 12 15 20 25)
 
-# TODO: replace with measured/computed densities for 75SiO2.(25-x)Na2O.xK2O
 declare -A DENSITY_MAP
-DENSITY_MAP[0]=2.36   # TODO
-DENSITY_MAP[1]=2.35   # TODO
-DENSITY_MAP[3]=2.34   # TODO
-DENSITY_MAP[6]=2.32   # TODO
-DENSITY_MAP[9]=2.3   # TODO
-DENSITY_MAP[12]=2.28   # TODO
-DENSITY_MAP[15]=2.26   # TODO
-DENSITY_MAP[20]=2.23   # TODO
-DENSITY_MAP[25]=2.2   # TODO
+DENSITY_MAP[0]=2.429
+DENSITY_MAP[1]=2.429
+DENSITY_MAP[3]=2.429
+DENSITY_MAP[6]=2.429
+DENSITY_MAP[9]=2.429
+DENSITY_MAP[12]=2.429
+DENSITY_MAP[15]=2.429
+DENSITY_MAP[20]=2.429
+DENSITY_MAP[25]=2.429
 
 X_IDX=$(( SLURM_ARRAY_TASK_ID / 3 ))
 R=$(( SLURM_ARRAY_TASK_ID % 3 + 1 ))
