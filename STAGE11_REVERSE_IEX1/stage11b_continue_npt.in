@@ -1,0 +1,87 @@
+# STAGE11b_CONTINUE_NPT — Resume interrupted NPT of Reverse IEX1, PMMCS rc8p0
+#
+# STAGE11 (reverse IEX1) was interrupted during the NPT phase.
+# This script resumes from the last saved NPT trajectory frame.
+#
+# Strategy:
+#   1. read_data IOX1_723K  (system topology: masses, box, charges)
+#   2. Apply K→Na substitution to match the dump atom types
+#   3. include potfile
+#   4. read_dump last NPT frame (positions + charges, replace yes)
+#   5. velocity all create 723.0  (re-init velocities; thermostat re-equilibrates in ~1 ps)
+#   6. NPT run for remaining_steps
+#   7. write_data REIEX1_723K
+#
+# Required -var:
+#   val_x_target      target K2O mol% from STAGE3 (1, 3, 6, 9, 12, 15)
+#   val_r             replica index (1, 2, 3)
+#   potfile           path to PMMCS .mod file
+#   val_last_ts       last timestep present in the NPT dump file
+#   val_remaining     number of NPT steps still needed
+
+echo            both
+units           metal
+dimension       3
+boundary        p p p
+atom_style      charge
+atom_modify     map yes
+newton          on
+
+variable        x_target    equal ${val_x_target}
+variable        r           equal ${val_r}
+variable        last_ts     equal ${val_last_ts}
+variable        remaining   equal ${val_remaining}
+variable        dt          equal 0.001
+
+variable        seed_vel    equal 86000+v_x_target*100+v_r*10
+
+# Dump interval: same as original (600000 steps = 600 ps per frame)
+variable        dump_npt    equal 600000
+
+shell mkdir -p data/rev_iex1_723K logs trajectories
+
+log logs/stage11b_xt${x_target}_r${r}_PMMCS_rc8p0.lammps
+
+# Step 1 — read original IOX1 data for topology
+read_data       ../STAGE3_IEX_PROTO1/data/iox1_723K/IOX1_723K_xt${x_target}_r${r}_PMMCS_rc8p0.data
+
+# Step 2 — apply same K→Na substitution as stage11
+set             type 5 type 4
+set             type 4 charge 0.6000
+
+# Step 3 — potential
+include         ${potfile}
+
+neighbor        2.0 bin
+neigh_modify    delay 0 check yes every 1
+
+# Step 4 — overwrite positions and charges from last NPT dump frame
+print "STAGE11b: reading positions from NPT dump at timestep ${last_ts}"
+read_dump       trajectories/REIEX1_NPT_723K_xt${x_target}_r${r}_PMMCS_rc8p0.lammpstrj &
+                ${last_ts} x y z q replace yes
+
+# Step 5 — reinitialize velocities at 723 K
+# (thermostat tau=0.1 ps re-equilibrates in a few ps, well within remaining run)
+velocity        all create 723.0 ${seed_vel} rot yes mom yes dist gaussian
+
+# Step 6 — NPT for remaining steps
+timestep        ${dt}
+thermo          10000
+thermo_style    custom step time temp press pe etotal vol density
+thermo_modify   norm no
+
+# Append to the existing NPT trajectory (do not overwrite frames already saved)
+dump            NPT all custom ${dump_npt} &
+                trajectories/REIEX1_NPT_723K_xt${x_target}_r${r}_PMMCS_rc8p0.lammpstrj &
+                id type q x y z
+dump_modify     NPT sort id element Si O Ca Na K first yes append yes
+
+fix             NPT all npt temp 723.0 723.0 0.1 iso 0.0 0.0 1.0
+run             ${remaining}
+unfix           NPT
+undump          NPT
+
+# Step 7 — save final structure
+write_data      data/rev_iex1_723K/REIEX1_723K_xt${x_target}_r${r}_PMMCS_rc8p0.data nocoeff nofix
+
+print "STAGE11b done: REIEX1 x_target=${x_target} r=${r} — continued from step ${last_ts}"

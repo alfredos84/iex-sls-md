@@ -1,0 +1,43 @@
+# IEX_SLS — .gitignore
+# Exclude heavy simulation data and generated intermediate files
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# RINGS code (binary, not ours)
+rings-code-v1.3.5/
+
+# Cluster job logs (auto-generated, not needed)
+cluster_logs/
+
+# LAMMPS trajectory files (huge — GB each)
+*.lammpstrj
+*.lammpsdump
+
+# LAMMPS output data files (large binary/text)
+STAGE*/data/
+STAGE*/trajectories/
+
+# LAMMPS log files (verbose, regenerable)
+STAGE*/logs/
+*.lammps
+
+# RINGS intermediate data (thousands of small files per composition)
+RESULTS/GR_CN_RINGS/AM_x*/
+RESULTS/GR_CN_RINGS/IEX2_x*/
+RESULTS/GR_CN_RINGS/REIEX2_x*/
+RESULTS/GR_CN_RINGS/AM300K_x*/
+RESULTS/BOND_ANGLE_DIST/data/
+
+# Grace/xmgrace files (not standard cross-platform)
+*.agr
+
+# Small test directory
+1500_atoms/
+
+# Misc
+youngs_modulus_stress_strain/
+*.o
+*.err
