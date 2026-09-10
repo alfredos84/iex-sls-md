@@ -25,12 +25,12 @@ thermo_modify   norm no
 
 timestep        0.001
 
-# Frames para g(r): 11 frames cada 42300 pasos durante el enfriamiento
+# Frames para g(r): 10 frames cada 42300 pasos durante el enfriamiento (NVT, vol fijo)
 dump TRAJ all custom 42300 trajectories/Quench_${val_tag}_PMMCS_rc8p0.lammpstrj id type x y z
-dump_modify TRAJ sort id first yes
+dump_modify TRAJ sort id
 
-# Quench 723→300K at 1K/ps: (723-300)/1 = 423 ps = 423000 steps
-fix QUENCH all npt temp 723.0 300.0 0.1 iso 0.0 0.0 1.0
+# Quench 723→300K at 1K/ps: (723-300)/1 = 423 ps = 423000 steps — NVT (volumen fijo, conserva tensiones IEX)
+fix QUENCH all nvt temp 723.0 300.0 0.1
 run             423000
 unfix QUENCH
 undump TRAJ
