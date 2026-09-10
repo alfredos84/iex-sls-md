@@ -12,7 +12,7 @@
 #   5. write_data IOX1_723K
 #
 # Required -var:
-#   val_x_target   target K2O mol% (1, 3, 6, 9, 12, 15)
+#   val_x_target   target K2O mol% (1, 5, 10, 15, 20, 25)
 #   val_r          replica index (1, 2, 3)
 #   potfile        path to PMMCS .mod file
 
@@ -51,7 +51,7 @@ neigh_modify    delay 0 check yes every 1
 
 group           Na_group  type 4
 variable        n_Na      equal count(Na_group)
-variable        n_replace equal round(v_n_Na*v_x_target/15.0)
+variable        n_replace equal round(v_n_Na*v_x_target/25.0)
 
 print "STAGE3: x_target=${x_target} r=${r} — replacing ${n_replace} of ${n_Na} Na with K"
 

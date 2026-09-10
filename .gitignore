@@ -43,6 +43,14 @@ log.lammps
 **/BOND_ANGLE_DIST/data/
 **/BOND_ANGLE_DIST/bonds/
 
+# COMPARISON — computed data (regenerable from scripts)
+COMPARISON/STRESS/dumps/
+COMPARISON/INDENTATION/**/*.dat
+COMPARISON/INDENTATION/**/*.xyz
+COMPARISON/INDENTATION/**/log.lammps
+COMPARISON/INDENTATION/**/restart_*
+COMPARISON/INDENTATION/**/*.lammpstrj
+
 # Test and misc heavy directories
 1500_atoms/
 youngs_modulus_stress_strain/

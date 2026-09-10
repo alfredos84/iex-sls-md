@@ -1,0 +1,25 @@
+# create_slab.in
+# Lee la caja bulk AM (p p p), extiende z para crear superficie libre, escribe slab.dat.
+# Átomo types: Si=1, O=2, Ca=3, Na=4, K=5
+#
+# Caja bulk: ~57.65 Å cúbica
+# Slab: extendemos z a 250 Å para dejar ~192 Å de vacío sobre el vidrio.
+# Con kspace_modify slab 3.0 necesitamos vacío >= 2x grosor del slab.
+
+units           metal
+dimension       3
+boundary        p p f
+atom_style      charge
+atom_modify     map yes
+
+read_data       ../../../75SiO2_15-xNa2O_xK2O_10CaO/STAGE1_MELTQUENCH/data/asmelted_723K/AsMelted_723K_x0_r1_PMMCS_rc8p0.data
+
+# Extender la caja en z para crear vacío (conserva las posiciones atómicas)
+change_box all z final 0.0 250.0 boundary p p f units box
+
+# Centrar el vidrio en z=0..57.65, vacío arriba (57.65..250 Å)
+# Las coordenadas ya quedan en 0..57.65 tras el read_data
+
+write_data      slab.dat nocoeff
+
+print "Slab escrito: slab.dat  (vacío en z desde ~57.7 hasta 250 Å)"

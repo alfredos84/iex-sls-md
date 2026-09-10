@@ -1,0 +1,30 @@
+# stress.in — per-atom hydrostatic stress for one snapshot (run 0)
+# Variables: datafile, outbase, potfile
+# Usage:
+#   lmp -in stress.in -var datafile /path/to/file.data \
+#                     -var outbase  /path/to/output/tag \
+#                     -var potfile  /path/to/PMMCS_pedone_rc8p0.mod
+
+units           metal
+dimension       3
+boundary        p p p
+atom_style      charge
+atom_modify     map yes
+newton          on
+
+read_data       ${datafile}
+
+include         ${potfile}
+
+# Per-atom stress tensor (bar * Ang^3)
+# [1]=sxx [2]=syy [3]=szz [4]=sxy [5]=sxz [6]=syz
+compute         sa all stress/atom NULL
+
+# Dump diagonal components only (sufficient for hydrostatic)
+dump            str all custom 1 ${outbase}_stress.dat id type c_sa[1] c_sa[2] c_sa[3]
+dump_modify     str sort id format float %18.8f
+
+thermo          1
+thermo_style    custom step pe press
+
+run             0

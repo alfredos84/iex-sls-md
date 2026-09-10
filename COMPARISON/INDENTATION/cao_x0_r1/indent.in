@@ -1,0 +1,108 @@
+# indent.in — Nanoindentación MD sobre vidrio SLS (10CaO, x=0, r=1)
+# Potencial: PMMCS (vidrio) + Tersoff (C-C) + Buckingham (C-vidrio)
+# Protocolo: equilibración 20 ps → carga 5 nm (100 ps) → hold 100 ps → descarga (100 ps)
+#
+# Tipos: Si=1, O=2, Ca=3, Na=4, K=5, C(tip)=6
+
+echo            both
+units           metal
+dimension       3
+boundary        p p f
+atom_style      charge
+atom_modify     map yes
+newton          on
+
+read_data       slab2x2_tip.data
+
+mass 1 28.086
+mass 2 15.9994
+mass 3 40.078
+mass 4 22.99
+mass 5 39.10
+mass 6 12.011
+
+# ── Potenciales ───────────────────────────────────────────────────────────────
+pair_style      hybrid/overlay pedone 8.0 coul/long 12.0 tersoff buck 10.0
+
+pair_coeff      * * coul/long
+
+pair_coeff      1 2 pedone 0.340554 2.006700 2.100000  1.0
+pair_coeff      2 2 pedone 0.042395 1.379316 3.618701 22.0
+pair_coeff      2 3 pedone 0.030211 2.241334 2.923245  5.0
+pair_coeff      2 4 pedone 0.023363 1.763867 3.006315  5.0
+pair_coeff      2 5 pedone 0.011612 2.062605 3.305308  5.0
+
+pair_coeff      * * tersoff /home/alfredo/.local/share/lammps/potentials/SiC.tersoff NULL NULL NULL NULL NULL C
+
+pair_coeff      1 6 buck 1000.0 0.25 0.0
+pair_coeff      2 6 buck 1000.0 0.25 0.0
+pair_coeff      3 6 buck 1000.0 0.25 0.0
+pair_coeff      4 6 buck 1000.0 0.25 0.0
+pair_coeff      5 6 buck 1000.0 0.25 0.0
+
+kspace_style    pppm 1.0e-4
+kspace_modify   slab 3.0
+
+# ── Grupos ───────────────────────────────────────────────────────────────────
+group           glass  type 1 2 3 4 5
+group           tip    type 6
+
+region          bottom block INF INF INF INF INF 20.0 units box
+group           bottom_glass region bottom
+group           mobile subtract glass bottom_glass
+
+# ── Parámetros de tiempo ──────────────────────────────────────────────────────
+neighbor        2.0 bin
+neigh_modify    delay 0 every 1 check yes
+timestep        0.001
+
+# ── Computes para curva P-h ───────────────────────────────────────────────────
+compute         fz_tip tip reduce sum fz
+variable        fz     equal c_fz_tip
+compute         tipz   tip reduce ave z
+variable        zpos   equal c_tipz
+
+thermo          1000
+thermo_style    custom step temp etotal pe press density
+
+# ── Equilibración 20 ps ───────────────────────────────────────────────────────
+fix             freeze bottom_glass move linear 0.0 0.0 0.0 units box
+fix             nvt_eq mobile nvt temp 300 300 0.1
+
+run             20000
+unfix           nvt_eq
+
+# ── Indentación ──────────────────────────────────────────────────────────────
+fix             nvt_ind mobile nvt temp 300 300 0.1
+fix             IndentForce all ave/time 100 10 1000 v_fz v_zpos file tip_force_vs_disp.dat
+
+dump            dOV all custom 2000 indent.lammpstrj id type x y z
+dump_modify     dOV sort id
+
+# Carga: 0.5 Å/ps hacia -z → 5 nm en 100 ps = 100000 pasos
+print "### START LOADING ###"
+fix             loading tip move linear 0.0 0.0 -0.5 units box
+run             100000
+unfix           loading
+write_data      data_maxload.dat nocoeff
+
+# Hold: punta fija 100 ps = 100000 pasos
+print "### HOLDING at max load ###"
+fix             holding tip move linear 0.0 0.0 0.0 units box
+run             100000
+unfix           holding
+
+# Descarga: 0.5 Å/ps hacia +z → 5 nm en 100 ps = 100000 pasos
+print "### START UNLOADING ###"
+fix             unloading tip move linear 0.0 0.0 0.5 units box
+run             100000
+unfix           unloading
+write_data      data_after_unload.dat nocoeff
+
+unfix           nvt_ind
+unfix           IndentForce
+unfix           freeze
+
+write_restart   restart_final
+
+print "Indentación terminada. Curva P-h en: tip_force_vs_disp.dat"

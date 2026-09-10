@@ -7,6 +7,8 @@
 #SBATCH --time=04:00:00
 #SBATCH --output=../cluster_logs/%x_%A_%a.out
 #SBATCH --error=../cluster_logs/%x_%A_%a.err
+#SBATCH --mail-user=alfredo.daniel.sanchez@gmail.com
+#SBATCH --mail-type=END,FAIL
 
 # TEST_GLASS_PMMCS — STAGE15 AM NPT 723K (5000 oxide units, PMMCS rc8p0)
 # x = 0, 1, 3, 6, 9, 12, 15 — 7 compositions × 3 replicas = 21 tasks (array 0-20)

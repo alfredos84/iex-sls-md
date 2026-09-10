@@ -9,6 +9,8 @@
 #SBATCH --time=24:00:00
 #SBATCH --output=../cluster_logs/%x_%A_%a.out
 #SBATCH --error=../cluster_logs/%x_%A_%a.err
+#SBATCH --mail-user=alfredo.daniel.sanchez@gmail.com
+#SBATCH --mail-type=END,FAIL
 
 # TEST_GLASS_PMMCS — STAGE11 Reverse IEX Protocol 1 (5000 oxide units, PMMCS rc8p0)
 # x_target = 1, 3, 6, 9, 12, 15 — 6 compositions × 3 replicas = 18 tasks (array 0-17)

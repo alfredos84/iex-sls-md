@@ -7,6 +7,8 @@
 #SBATCH --time=04:00:00
 #SBATCH --output=../cluster_logs/%x_%A_%a.out
 #SBATCH --error=../cluster_logs/%x_%A_%a.err
+#SBATCH --mail-user=alfredo.daniel.sanchez@gmail.com
+#SBATCH --mail-type=END,FAIL
 
 # TEST_GLASS_PMMCS — STAGE11b: continue interrupted NPT of Reverse IEX1
 # Resumes from last saved NPT frame in the trajectory file.

@@ -7,6 +7,8 @@
 #SBATCH --time=06:00:00
 #SBATCH --output=../cluster_logs/%x_%A_%a.out
 #SBATCH --error=../cluster_logs/%x_%A_%a.err
+#SBATCH --mail-user=alfredo.daniel.sanchez@gmail.com
+#SBATCH --mail-type=END,FAIL
 
 # TEST_GLASS_PMMCS — STAGE8 Athermal elastic tensor, as-melted @300K (PMMCS rc8p0)
 # x = 0, 1, 3, 6, 9, 12, 15 — 7 compositions × 3 replicas = 21 tasks (array 0-20)
@@ -55,5 +57,5 @@ for DIR in 1 2 3 4 5 6; do
 done
 
 echo "  [14/14] Computing Cij..."
-python3 compute_Cij_300K.py --tag "${TAG}" --results results/
+# NOTE-DEVANA-NOPY: python3 compute_Cij_300K.py --tag "${TAG}" --results results/
 echo "Done: ${TAG}"

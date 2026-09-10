@@ -54,5 +54,5 @@ for DIR in 1 2 3 4 5 6; do
 done
 
 echo "  [14/14] Computing Cij..."
-python3 compute_Cij_300K.py --tag "${TAG}" --results results/
+# NOTE-DEVANA-NOPY: python3 compute_Cij_300K.py --tag "${TAG}" --results results/
 echo "Done: ${TAG}"

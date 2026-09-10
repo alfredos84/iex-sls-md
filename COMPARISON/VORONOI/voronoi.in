@@ -1,0 +1,24 @@
+# voronoi.in — compute Voronoi volumes and neighbor list for one snapshot
+# Variables: datafile, outbase
+# Usage: lmp -in voronoi.in -var datafile /path/to/file.data -var outbase /path/to/out
+
+units metal
+atom_style charge
+boundary p p p
+
+read_data ${datafile}
+
+pair_style zero 10.0
+pair_coeff * *
+
+compute voro all voronoi/atom neighbors yes
+
+# Per-atom: id type volume nfaces
+dump vol all custom 1 ${outbase}_vol.dat id type c_voro[1] c_voro[2]
+dump_modify vol sort id format float %18.10f
+
+# Per-face neighbor list: id_i id_j face_area
+dump neigh all local 1 ${outbase}_neigh.dat c_voro[1] c_voro[2] c_voro[3]
+dump_modify neigh format float %18.10f
+
+run 0

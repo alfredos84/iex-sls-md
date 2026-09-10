@@ -58,6 +58,6 @@ for DIR in 1 2 3 4 5 6; do
 done
 
 echo "  [14/14] Computing Cij tensor..."
-python3 compute_Cij.py --xp "${X}" --r "${R}" --results results/
+# NOTE-DEVANA-NOPY: python3 compute_Cij.py --xp "${X}" --r "${R}" --results results/
 
 echo "Done: x_parent=${X} r=${R}"

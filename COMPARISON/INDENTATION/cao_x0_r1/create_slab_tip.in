@@ -1,0 +1,43 @@
+# create_slab_tip.in
+# Lee slab.dat, replica 2x2 en x,y, agrega punta cónica de carbono (tipo 6).
+#
+# Tipos resultantes: Si=1, O=2, Ca=3, Na=4, K=5, C(tip)=6
+# Geometría punta: cono Berkovich equivalente, ángulo semi-apical 37.3°
+#   radio base = 40 Å, altura = 52.5 Å
+#   ápice en z_apex = zhi_glass + 5.0 (5 Å sobre la superficie)
+
+units           metal
+dimension       3
+boundary        p p f
+atom_style      charge
+atom_modify     map yes
+
+read_data       slab.dat
+
+# Replica 2x2 en x,y: caja pasa a ~115 x 115 x 250 Å, 58000 átomos de vidrio
+replicate       2 2 1
+
+# Centro de la caja en x,y
+variable xmid   equal xlo+0.5*lx
+variable ymid   equal ylo+0.5*ly
+
+# Superficie del vidrio: los átomos están en z ~ 0..57.65
+# (tras replicate la zhi sigue en 250, solo x,y se duplicaron)
+variable zsurf  equal 57.65
+variable zapex  equal ${zsurf}+5.0
+variable zbase  equal ${zapex}+52.5
+
+variable tip_r  equal 40.0      # radio de la base (Å)
+
+# Crear átomos de C en la región cónica (tipo 6)
+lattice         diamond 3.567
+region          tip_cone cone z ${xmid} ${ymid} 0.0 ${tip_r} ${zapex} ${zbase} units box
+create_atoms    6 region tip_cone
+mass            6 12.011
+set             type 6 charge 0.0
+
+write_data      slab2x2_tip.data nocoeff
+
+print "Escrito: slab2x2_tip.data"
+print "  Vidrio: 58000 átomos (tipos 1-5)"
+print "  Punta C: tipo 6, ápice en z=${zapex} Å"

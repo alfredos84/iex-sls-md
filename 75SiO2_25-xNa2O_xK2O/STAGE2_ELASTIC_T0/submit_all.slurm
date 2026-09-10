@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=noca5k_elT0_all
 #SBATCH --account=p1934-26-t
-#SBATCH --array=0-26
+#SBATCH --array=0-20
 #SBATCH --ntasks-per-node=48
 #SBATCH --nodes=1
 #SBATCH --time=24:00:00
 #SBATCH --output=../cluster_logs/%x_%A_%a.out
 #SBATCH --error=../cluster_logs/%x_%A_%a.err
+#SBATCH --mail-user=alfredo.daniel.sanchez@gmail.com,alfredo.sanchez@tnuni.sk
+#SBATCH --mail-type=END,FAIL
 
-# TEST_GLASS_PMMCS — STAGE2 Athermal elastic tensor (T=0 K, PMMCS rc8p0, 5000 oxide units)
-# x = 0,1,3,6,9,12,15 — 7 compositions x 3 replicas = 21 tasks (array 0-20)
+# 75SiO2.(25-x)Na2O.xK2O — STAGE2 Athermal elastic tensor (T=0 K, PMMCS rc8p0, no Ca)
+# x = 0,1,5,10,15,20,25 — 7 compositions x 3 replicas = 21 tasks (array 0-20)
 
 module load foss/2021b
 LMP_BIN=$HOME/bin/lmp_2024_cpu
@@ -17,7 +19,7 @@ LMP_BIN=$HOME/bin/lmp_2024_cpu
 POTFILE="../IPs/PMMCS/PMMCS_pedone_rc8p0.mod"
 STRAIN_UP="5.0e-4"
 
-X_VALUES=(0 1 3 6 9 12 15 20 25)
+X_VALUES=(0 1 5 10 15 20 25)
 X_IDX=$(( SLURM_ARRAY_TASK_ID / 3 ))
 R=$(( SLURM_ARRAY_TASK_ID % 3 + 1 ))
 X=${X_VALUES[$X_IDX]}
@@ -52,7 +54,5 @@ for DIR in 1 2 3 4 5 6; do
     done
 done
 
-echo "  [14/14] Computing Cij tensor..."
-python3 compute_Cij.py --x "${X}" --r "${R}" --results results/
-
 echo "Done: x=${X} r=${R}"
+# NOTE: compute_Cij.py runs locally (numpy not available on DEVANA compute nodes)

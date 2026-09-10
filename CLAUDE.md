@@ -163,6 +163,85 @@ pcFG accesses the repo via GitHub. File paths use Linux conventions on pcHAL.
 - Temperatures studied: 600, 723, 800, 1000, 1200 K (MSD)
 - Ion exchange temperature: 723 K
 
+## COMPARISON/ — Análisis comparativos (CaO vs Ca-libre)
+
+Carpeta paralela a las composiciones, contiene análisis que comparan los dos sistemas:
+- **CaO**: 75SiO₂·(15−x)Na₂O·xK₂O·10CaO (x = 3,6,9,12,15; tipos Si=1,O=2,Ca=3,Na=4,K=5)
+- **Ca-libre (noca)**: 75SiO₂·(25−x)Na₂O·xK₂O (x = 5,10,15,20,25)
+
+Configuraciones abreviadas como `XX_CONFIG`: χ=20→(cao:3,noca:5), 40→(6,10), 60→(9,15), 80→(12,20), 100→(15,25).
+
+### COMPARISON/BO_NBO/
+Análisis de oxígenos puente (BO) y no-puente (NBO) por especie modificadora.
+- `fig_bo_nbo_batch.py` — distribuciones de CN_BO y CN_NBO por χ; 2×2 paneles; figsize=(13,13)
+- `fig_bo_nbo_vs_chi.py` — ⟨CN⟩ vs χ con ajuste lineal; figsize=(9,4.5)
+- Cutoffs: RCUT_SIO=2.0 Å (BO/NBO), RCUT_CA=3.20, RCUT_NA=3.21, RCUT_K=3.77 Å
+
+### COMPARISON/STRESS/
+Estrés atómico hidrostático P_i = −(σ_xx+σ_yy+σ_zz)/(3·V_i) [GPa].
+- `stress.in` — LAMMPS: compute stress/atom + dump (unidades: bar·Å³)
+- `run_stress.sh` — corre las 60 configuraciones; dumps en `COMPARISON/STRESS/dumps/`
+- `fig_stress.py` — figuras por χ y promedio; separado en modificadores (±20 GPa) y red (Si/O, ±210 GPa)
+- Volúmenes de Voronoi vienen de `COMPARISON/VORONOI/`
+
+### COMPARISON/INDENTATION/
+**Protocolo de nanoindentación MD según Pedone** (ver papers en `papers/`).
+
+#### Estado actual (listo para correr en cluster):
+Subcarpeta `cao_x0_r1/` — muestra piloto: vidrio CaO AM x=0 r=1.
+
+| Archivo | Función |
+|---|---|
+| `create_slab.in` | Lee bulk AM (57.65³ Å), extiende z→250 Å → `slab.dat` |
+| `create_slab_tip.in` | Replica 2×2 en x,y, crea cono C (tipo 6) → `slab2x2_tip.data` |
+| `indent.in` | Simulación completa: equilibración + carga + hold + descarga |
+| `indent_test.in` | Prueba rápida (500+200 pasos) — **VERIFICADO OK en pcHAL** |
+| `lammps2xyz.py` | Convierte `.data` → `.xyz` para visualizar en VESTA |
+
+#### Detalles técnicos de la punta:
+- Tipo 6 = C (diamante), carga 0, Tersoff C-C (`SiC.tersoff`)
+- Repulsión C-vidrio: Buckingham A=1000 eV, ρ=0.25 Å, C=0
+- `pair_style hybrid/overlay pedone 8.0 coul/long 12.0 tersoff buck 10.0`
+- `kspace_modify slab 3.0` (boundary p p f)
+- Geometría: ápice en z=62.65 Å (5 Å sobre superficie), radio base 40 Å, altura 52.5 Å
+- 15,805 átomos C + 58,000 átomos vidrio = 73,805 total
+
+#### Protocolo de corrida (pendiente en cluster):
+```
+1. lmp -in create_slab.in        # genera slab.dat
+2. lmp -in create_slab_tip.in    # genera slab2x2_tip.data
+3. lmp -in indent.in             # simulación completa (~300,000 pasos)
+```
+- Equilibración: 20,000 pasos (20 ps)
+- Carga: 100,000 pasos (100 ps, 5 nm a 0.5 Å/ps)
+- Hold: 100,000 pasos (100 ps)
+- Descarga: 100,000 pasos (100 ps)
+- Salida clave: `tip_force_vs_disp.dat` → curva P-h → método Oliver-Pharr → H y E_r
+- Performance en 1 core: ~1.3 steps/s → **necesita MPI en cluster**
+- Estimado en cluster FunGlass (48 cores): ~2-4 h por muestra
+
+#### Extensión planificada:
+Una vez verificado el protocolo con `cao_x0_r1`, replicar para:
+- Todos los x del sistema CaO (x=0,3,6,9,12,15)
+- El sistema Ca-libre (noca) con composiciones equivalentes
+- 3 réplicas por composición
+- Post-proceso: curva P-h → Oliver-Pharr → H vs χ, E_r vs χ
+- Opcional: índice DSF de Pedone (densificación vs flujo de corte)
+
+#### Nota sobre `slab.dat`:
+Al crearlo con `create_slab.in`, hay que editar manualmente el header para cambiar
+"5 atom types" → "6 atom types" y agregar "6 12.011" en la sección Masses,
+antes de correr `create_slab_tip.in`. (Necesario porque LAMMPS no permite
+`create_atoms tipo_N` si N > ntypes del data file.)
+
+## Papers relevantes (Pedone)
+
+En `papers/` (no commiteados por tamaño):
+1. Paper sobre estrés atómico en vidrios SLS — metodología usada en COMPARISON/STRESS/
+2. Paper sobre nanoindentación MD en vidrio albita — protocolo base para COMPARISON/INDENTATION/
+   - Define índice DSF para separar densificación y flujo de corte
+   - Usa punta cónica equivalente a Berkovich (ángulo semi-apical 37.3°)
+
 ## Notes for a fresh session
 
 1. The primary working directory is `/home/alfredo/Simulations_MD_LAMMPS/IEX_SLS/`
@@ -171,3 +250,23 @@ pcFG accesses the repo via GitHub. File paths use Linux conventions on pcHAL.
 4. RINGS software is only used for ring statistics (rstat/)
 5. CN(r) = ρ_B × 4π ∫₀ʳ g(r') r'² dr' — computed by cumsum in the analysis scripts
 6. When launching jobs: user will say "lanza esto a DEVANA/FG/LEONARDO" — prepare the right slurm variant
+
+## Estado actual del proyecto (sesión 2025-2026)
+
+### Lo que ya está hecho:
+- Análisis BO/NBO por especie modificadora (`COMPARISON/BO_NBO/`) — figuras generadas
+- Estrés atómico hidrostático AM+IEX1 para CaO y noca (`COMPARISON/STRESS/`) — figuras generadas
+- Scripts de nanoindentación MD completos (`COMPARISON/INDENTATION/cao_x0_r1/`) — **probados y funcionando**
+
+### Lo que viene — próxima tarea inmediata:
+**Lanzar la nanoindentación completa en FunGlass (o DEVANA).**
+
+Pasos concretos:
+1. Preparar slurm script para `cao_x0_r1/indent.in` en FunGlass (48 cores, ~2-4 h)
+2. Verificar que `slab2x2_tip.data` está disponible en el cluster (o regenerarlo corriendo create_slab.in y create_slab_tip.in primero — recordar editar el header de slab.dat para añadir tipo 6)
+3. Correr la simulación y obtener `tip_force_vs_disp.dat`
+4. Post-procesar con Oliver-Pharr para extraer H y E_r
+5. Una vez validado con x=0 r=1, extender a todas las composiciones y réplicas
+
+### Pregunta de inicio sugerida por el usuario:
+Si el usuario dice "¿estás listo para empezar?", la respuesta es **Sí** — tenemos los scripts de indentación listos y probados, y el siguiente paso concreto es preparar el slurm y lanzar en el cluster.

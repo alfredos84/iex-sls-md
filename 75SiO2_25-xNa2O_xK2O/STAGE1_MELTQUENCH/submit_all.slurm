@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=noca5k_s1_all
 #SBATCH --account=p1934-26-t
-#SBATCH --array=0-26
+#SBATCH --array=0-20
 #SBATCH --ntasks-per-node=48
 #SBATCH --nodes=1
 #SBATCH --time=24:00:00
@@ -9,7 +9,7 @@
 #SBATCH --error=../cluster_logs/%x_%A_%a.err
 
 # 75SiO2.(25-x)Na2O.xK2O — STAGE1 Melt-quench (5000 oxide units, PMMCS rc8p0, no Ca)
-# x = 0,1,3,6,9,12,15,20,25 — 9 compositions x 3 replicas = 27 tasks (array 0-26)
+# x = 0,1,5,10,15,20,25 — 7 compositions x 3 replicas = 21 tasks (array 0-20)
 # Layout: task i → X_VALUES[i/3], replica (i%3)+1
 
 module load foss/2021b
@@ -17,15 +17,13 @@ LMP_BIN=$HOME/bin/lmp_2024_cpu
 
 POTFILE="../IPs/PMMCS/PMMCS_pedone_rc8p0.mod"
 
-X_VALUES=(0 1 3 6 9 12 15 20 25)
+X_VALUES=(0 1 5 10 15 20 25)
 
 declare -A DENSITY_MAP
 DENSITY_MAP[0]=2.429
 DENSITY_MAP[1]=2.429
-DENSITY_MAP[3]=2.429
-DENSITY_MAP[6]=2.429
-DENSITY_MAP[9]=2.429
-DENSITY_MAP[12]=2.429
+DENSITY_MAP[5]=2.429
+DENSITY_MAP[10]=2.429
 DENSITY_MAP[15]=2.429
 DENSITY_MAP[20]=2.429
 DENSITY_MAP[25]=2.429
