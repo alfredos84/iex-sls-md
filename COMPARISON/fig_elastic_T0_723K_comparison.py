@@ -20,10 +20,10 @@ CAO_IEX1_RES = BASE / "75SiO2_15-xNa2O_xK2O_10CaO" / "STAGE5_ELASTIC_T0_PROTO1" 
 NOCA_AM_RES   = BASE / "75SiO2_25-xNa2O_xK2O" / "STAGE2_ELASTIC_T0"   / "results"
 NOCA_IEX1_RES = BASE / "75SiO2_25-xNa2O_xK2O" / "STAGE5_ELASTIC_T0_PROTO1" / "results"
 
-X_CAO_AM   = np.array([0, 1, 3, 6, 9, 12, 15])
-X_CAO_IEX1 = np.array([1, 3, 6, 9, 12, 15])
-X_NOCA_AM   = np.array([0, 1, 5, 10, 15, 20, 25])
-X_NOCA_IEX1 = np.array([1, 5, 10, 15, 20, 25])
+X_CAO_AM   = np.array([0, 3, 6, 9, 12, 15])
+X_CAO_IEX1 = np.array([3, 6, 9, 12, 15])
+X_NOCA_AM   = np.array([0, 5, 10, 15, 20, 25])
+X_NOCA_IEX1 = np.array([5, 10, 15, 20, 25])
 
 XREL_CAO_AM   = X_CAO_AM   / 15.0
 XREL_CAO_IEX1 = X_CAO_IEX1 / 15.0
@@ -125,7 +125,7 @@ for ax, pi, ylabel in zip(axes, props, ylabels):
 
 # x label solo en fila inferior
 for ax in axes[2:]:
-    ax.set_xlabel(r'K$_2$O / (Na$_2$O + K$_2$O) (%)', fontsize=14)
+    ax.set_xlabel(r'$\chi$ (%)', fontsize=14)
 
 fig.tight_layout(rect=[0, 0, 1, 0.93])
 

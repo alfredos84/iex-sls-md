@@ -38,10 +38,10 @@ NOCA_IEX1_DATA = BASE / "75SiO2_25-xNa2O_xK2O" / "STAGE3_IEX_PROTO1" / "data" / 
 NA     = 6.02214076e23
 N_MOLS = 5000
 
-X_CAO_AM   = np.array([0, 1, 3, 6, 9, 12, 15])
-X_CAO_IEX1 = np.array([1, 3, 6, 9, 12, 15])
-X_NOCA_AM   = np.array([0, 1, 5, 10, 15, 20, 25])
-X_NOCA_IEX1 = np.array([1, 5, 10, 15, 20, 25])
+X_CAO_AM   = np.array([0, 3, 6, 9, 12, 15])
+X_CAO_IEX1 = np.array([3, 6, 9, 12, 15])
+X_NOCA_AM   = np.array([0, 5, 10, 15, 20, 25])
+X_NOCA_IEX1 = np.array([5, 10, 15, 20, 25])
 
 # Concentración relativa K2O/(Na2O+K2O): CaO total alkali=15, Ca-free=25
 XREL_CAO_AM   = X_CAO_AM   / 15.0
@@ -171,7 +171,7 @@ ax.errorbar(XREL_NOCA_IEX1, Vm_noca_iex1_m, yerr=Vm_noca_iex1_s,
             color=C_IEX1_DARK, marker='^', ls='--',
             label=r'IEX1 — Ca-free', zorder=4, **KW)
 
-ax.set_xlabel(r'K$_2$O / (Na$_2$O + K$_2$O) (%)', fontsize=14)
+ax.set_xlabel(r'$\chi$ (%)', fontsize=14)
 ax.set_ylabel(r'Molar Volume (cm$^3$ mol$^{-1}$)', fontsize=14)
 
 ax.set_xlim(-0.03, 1.03)

@@ -184,7 +184,7 @@ ax.errorbar(XREL_NOCA_IEX1, LNDC_noca_iex1, yerr=LNDC_noca_err,
 ax.plot(xrel_fit, fit_cao,  color=C_IEX1,      lw=1.2, ls='-',  zorder=3, label='_nolegend_')
 ax.plot(xrel_fit, fit_noca, color=C_IEX1_DARK, lw=1.2, ls='--', zorder=3, label='_nolegend_')
 
-ax.set_xlabel(r'K$_2$O / (Na$_2$O + K$_2$O) (%)', fontsize=14)
+ax.set_xlabel(r'$\chi$ (%)', fontsize=14)
 ax.set_ylabel(r'LNDC (ppk mol%$^{-1}$)', fontsize=14)
 
 ax.set_xlim(-0.03, 1.03)
