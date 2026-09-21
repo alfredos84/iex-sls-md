@@ -1,4 +1,4 @@
-# indent.in — Nanoindentación MD sobre vidrio SLS (10CaO, x=0, r=1)
+# indent.in — Nanoindentación MD sobre vidrio SLS sin Ca, x=0, r=1
 # Potencial: PMMCS (vidrio) + Tersoff (C-C) + Buckingham (C-vidrio)
 # Protocolo: equilibración 20 ps → carga 5 nm (100 ps) → hold 100 ps → descarga (100 ps)
 #
@@ -89,6 +89,7 @@ fix             IndentForce all ave/time 100 10 1000 v_fz v_zpos file tip_force_
 
 dump            dOV all custom 2000 indent.lammpstrj id type x y z
 dump_modify     dOV sort id
+restart         10000 restart.indent.a restart.indent.b
 
 # Carga: 0.5 Å/ps hacia -z → 5 nm en 100 ps = 100000 pasos
 print "### START LOADING ###"

@@ -1,0 +1,80 @@
+# relax_surface.in
+# Reconstruccion termica de la superficie recien cortada, siguiendo
+# textualmente el protocolo de Pedone (JNCS 683 (2026) 124105):
+# "heated up from 300 K to 1600 K with a heating rate of 5K/ps and then
+#  cooled down from 1600 K to 300 K with the same rate, followed by
+#  equilibration at 300 K for 400 ps."
+#
+# Sin freeze ni paredes reflectantes durante esta etapa: el paper no las
+# menciona, y con dos superficies libres genuinas (vacio real arriba Y
+# abajo, ver create_slab.in) no hay ninguna "segunda superficie accidental"
+# que proteger -- el freeze/paredes que se usaban antes eran un parche para
+# un problema introducido por poner vacio de un solo lado, no algo del
+# protocolo real.
+#
+# Tipos: Si=1, O=2, Ca=3, Na=4, K=5   (sin C todavia)
+
+units           metal
+dimension       3
+boundary        p p f
+processors      * * 1
+atom_style      charge
+atom_modify     map yes
+newton          on
+
+read_data       slab_2x2.data
+
+mass 1 28.086
+mass 2 15.9994
+mass 3 40.078
+mass 4 22.99
+mass 5 39.10
+
+pair_style      hybrid/overlay pedone 8.0 coul/long 12.0
+
+pair_coeff      * * coul/long
+
+pair_coeff      1 2 pedone 0.340554 2.006700 2.100000  1.0
+pair_coeff      2 2 pedone 0.042395 1.379316 3.618701 22.0
+pair_coeff      2 3 pedone 0.030211 2.241334 2.923245  5.0
+pair_coeff      2 4 pedone 0.023363 1.763867 3.006315  5.0
+pair_coeff      2 5 pedone 0.011612 2.062605 3.305308  5.0
+
+kspace_style    pppm 1.0e-4
+kspace_modify   slab 3.0
+
+group           glass_atoms type 1 2 3 4 5
+
+neighbor        2.0 bin
+neigh_modify    delay 0 every 1 check yes
+timestep        0.001
+
+thermo          2000
+thermo_style    custom step temp etotal pe press density
+thermo_modify   lost warn
+
+# El archivo de entrada viene de AsMelted_723K (hereda velocidades ~723K),
+# pero el protocolo arranca en 300K -- reseteamos la temperatura inicial.
+velocity        glass_atoms create 300.0 12345 mom yes rot yes dist gaussian
+
+# --- Calentamiento 300 -> 1600 K, 5 K/ps => 260 ps = 260000 pasos ---
+print "### HEATING 300->1600K ###"
+fix             1 glass_atoms nvt temp 300.0 1600.0 0.1
+run             260000
+unfix           1
+
+# --- Enfriamiento 1600 -> 300 K, 5 K/ps => 260 ps = 260000 pasos ---
+print "### COOLING 1600->300K ###"
+fix             2 glass_atoms nvt temp 1600.0 300.0 0.1
+run             260000
+unfix           2
+
+# --- Equilibracion final 400 ps a 300 K ---
+print "### EQUILIBRATING at 300K (400 ps) ###"
+fix             3 glass_atoms nvt temp 300.0 300.0 0.1
+run             400000
+unfix           3
+
+write_data      slab_2x2_relaxed.data nocoeff
+
+print "Escrito: slab_2x2_relaxed.data (superficie reconstruida, 920 ps totales)"

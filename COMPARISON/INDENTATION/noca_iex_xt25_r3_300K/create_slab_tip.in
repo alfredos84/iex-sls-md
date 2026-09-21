@@ -1,5 +1,5 @@
 # create_slab_tip.in
-# Lee slab_2x2_relaxed.data (ya replicado 2x2 y con superficie reconstruida
+# Lee slab_2x2_relaxed.data (ya replicado 3x3 y con superficie reconstruida
 # termicamente) y agrega la punta conica de carbono (tipo 6).
 #
 # Tipos resultantes: Si=1, O=2, Ca=3, Na=4, K=5, C(tip)=6

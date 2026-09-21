@@ -1,0 +1,108 @@
+# relax_surface.in — version IEX (cascara termica delgada, 3-4 capas atomicas)
+#
+# Diferencia clave respecto a la version AM (noca_x0_r1/relax_surface.in):
+# el archivo IEX de partida (STAGE3, 723K) ya tiene la composicion y el
+# estado local de tension del intercambio ionico (distinto del AM, ver
+# COMPARISON/STRESS/). Calentar TODO el vidrio a 1600K -- como en el AM --
+# relajaria tambien esa firma local, no solo la superficie recien cortada.
+# Por eso la reconstruccion termica se limita a una cascara MUY delgada
+# (~7 A, 3-4 capas atomicas) pegada a cada superficie libre -- la minima
+# necesaria para evitar el artefacto de corte crudo -- dejando el resto del
+# vidrio (incluida casi toda la profundidad de contacto de la punta, que
+# llega a ~37-40 A) en NVT suave a 300K, sin pasar por 1600K.
+#
+# Rampa acelerada respecto al AM (20 K/ps en vez de 5 K/ps, hold de 100 ps
+# en vez de 400 ps): se justifica porque ahora solo hace falta re-acomodar
+# una capa fina y local, no reconstruir/densificar una losa entera -- no es
+# el mismo problema fisico que resuelve el ciclo largo del AM.
+#
+# Tipos: Si=1, O=2, Ca=3, Na=4, K=5   (sin C todavia)
+
+units           metal
+dimension       3
+boundary        p p f
+processors      * * 1
+atom_style      charge
+atom_modify     map yes
+newton          on
+
+read_data       slab_2x2.data
+
+mass 1 28.086
+mass 2 15.9994
+mass 3 40.078
+mass 4 22.99
+mass 5 39.10
+
+pair_style      hybrid/overlay pedone 8.0 coul/long 12.0
+
+pair_coeff      * * coul/long
+
+pair_coeff      1 2 pedone 0.340554 2.006700 2.100000  1.0
+pair_coeff      2 2 pedone 0.042395 1.379316 3.618701 22.0
+pair_coeff      2 3 pedone 0.030211 2.241334 2.923245  5.0
+pair_coeff      2 4 pedone 0.023363 1.763867 3.006315  5.0
+pair_coeff      2 5 pedone 0.011612 2.062605 3.305308  5.0
+
+kspace_style    pppm 1.0e-4
+kspace_modify   slab 3.0
+
+group           glass_atoms type 1 2 3 4 5
+
+# --- Definicion de la cascara termica (~7 A, 3-4 capas atomicas) ---
+variable        zmin_g   equal bound(glass_atoms,zmin)
+variable        zmax_g   equal bound(glass_atoms,zmax)
+variable        zshell_b equal ${zmin_g}+7.0
+variable        zshell_t equal ${zmax_g}-7.0
+
+region          bottom_shell block INF INF INF INF INF ${zshell_b} units box
+region          top_shell    block INF INF INF INF ${zshell_t} INF units box
+
+group           bottom_shell_g region bottom_shell
+group           top_shell_g    region top_shell
+group           shell union bottom_shell_g top_shell_g
+group           core   subtract glass_atoms shell
+
+variable        n_shell equal count(shell)
+variable        n_core  equal count(core)
+print           "shell=${n_shell} atomos, core=${n_core} atomos"
+
+neighbor        2.0 bin
+neigh_modify    delay 0 every 1 check yes
+timestep        0.001
+
+thermo          2000
+thermo_style    custom step temp etotal pe press density
+thermo_modify   lost warn
+
+# El archivo de entrada viene de IOX1_723K (hereda velocidades ~723K); el
+# reset de velocidad es cinetico, no toca la estructura/tension del IEX.
+velocity        glass_atoms create 300.0 12345 mom yes rot yes dist gaussian
+
+# --- Calentamiento 300 -> 1600 K SOLO en la cascara, 20 K/ps => 65000 pasos ---
+print "### HEATING shell 300->1600K, core fijo a 300K ###"
+fix             1s shell nvt temp 300.0 1600.0 0.1
+fix             1c core  nvt temp 300.0 300.0  0.1
+run             65000
+unfix           1s
+unfix           1c
+
+# --- Enfriamiento 1600 -> 300 K SOLO en la cascara, 20 K/ps => 65000 pasos ---
+print "### COOLING shell 1600->300K, core fijo a 300K ###"
+fix             2s shell nvt temp 1600.0 300.0 0.1
+fix             2c core  nvt temp 300.0 300.0  0.1
+run             65000
+unfix           2s
+unfix           2c
+
+# --- Equilibracion final 100 ps a 300 K (cascara y core, ambos a 300K) ---
+print "### EQUILIBRATING at 300K (100 ps) ###"
+fix             3s shell nvt temp 300.0 300.0 0.1
+fix             3c core  nvt temp 300.0 300.0 0.1
+run             100000
+unfix           3s
+unfix           3c
+
+write_data      slab_2x2_relaxed.data nocoeff
+
+print "Escrito: slab_2x2_relaxed.data (cascara reconstruida, core preservado, 230 ps totales)"

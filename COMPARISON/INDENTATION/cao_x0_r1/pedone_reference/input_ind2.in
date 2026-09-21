@@ -1,0 +1,107 @@
+# ------------------------------------------------------------
+# Nanoindentation test on albite glass with diamond tip
+# ------------------------------------------------------------
+echo both
+variable p_id world 0
+
+units         metal
+dimension     3
+boundary      p p f
+atom_style    charge
+
+# 2. Read structure (slab + tip)
+read_data     slab2x2_tip_h52.5_r40.data
+
+mass 1 22.9898
+mass 2 26.9815
+mass 3 28.0855
+mass 4 15.999
+mass 5 12.011
+
+# 3. Include interatomic potentials
+include       in2.BMP
+
+# 4. Define groups
+group         tip   type 5
+group         glass type 1 2 3 4
+
+# --- Blocca gli atomi del fondo del vetro (z < 20 Å) ---
+region bottom block INF INF INF INF INF 20.0 units box
+group  bottom_glass region bottom
+fix    freeze_bottom bottom_glass move linear 0.0 0.0 0.0 units box
+#velocity bottom set 0.0 0.0 0.0
+
+# 5. Setup variables and computes
+variable fx_pos atom abs(fx)
+variable fy_pos atom abs(fy)
+variable fz_pos atom abs(fz)
+variable ftot   atom sqrt((fx^2)+(fy^2)+(fz^2))
+
+timestep      0.001
+variable      temp1 equal 300
+variable      tempDamp equal 0.01    # 0.1 ps standard value
+
+variable      out_freq equal 100
+variable      out_freq2 equal 1000
+
+compute totalpressure all pressure thermo_temp
+
+thermo 1000
+thermo_style  custom step temp etotal pe press density
+neighbor 2.0 bin
+neigh_modify delay 0 every 1 check yes
+
+# 6. Dynamics setup
+fix 1 glass nvt temp ${temp1} ${temp1} ${tempDamp}
+
+# Punta rigida
+#fix 2  tip rigid single
+
+# Calcolo forza e spostamento punta
+# Calcolo forza e spostamento punta (compatibile con LAMMPS 2019)
+compute fz_tip tip reduce sum fz
+variable fz equal c_fz_tip
+compute tipz tip reduce ave z
+variable zpos equal c_tipz
+
+fix IndentForce all ave/time 100 10 1000 v_fz v_zpos file tip_force_vs_disp.dat
+
+# 7. --- LOADING phase ---
+print "### START LOADING ###"
+
+fix 3c tip move linear 0.0 0.0 -0.5 units box   # velocità = 0.1 A/ps
+dump 1 all custom 2000 traj_loading.lammpstrj id type element x y z
+dump_modify 1 element Na Al Si O C sort id
+run 110000  # 500000 steps = 250 ps (a 0.0005 ps timestep)
+unfix 3c
+write_data data_maxload.dat
+
+# 8. --- HOLD phase ---
+print "### HOLDING at max load (20 ps) ###"
+
+fix hold tip move linear 0.0 0.0 0.0 units box
+dump 2 all custom 2000 traj_hold.lammpstrj id type element x y z
+dump_modify 2 element Na Al Si O C sort id
+run 40000  # 40000 * 0.0005 ps = 20 ps
+unfix hold
+
+# 9. --- UNLOADING phase ---
+print "### START UNLOADING ###"
+
+fix unload tip move linear 0.0 0.0 0.5 units box  # risale a 0.1 Å/ps
+dump 3 all custom 2000 traj_unloading.lammpstrj id type element x y z
+dump_modify 3 element Na Al Si O C sort id
+run 110000
+unfix unload
+write_data data_after_unload.dat
+
+# 10. Cleanup
+unfix 1
+#unfix 2
+#unfix freeze_bottom
+unfix IndentForce
+undump 1
+undump 2
+undump 3
+
+write_restart restart_final

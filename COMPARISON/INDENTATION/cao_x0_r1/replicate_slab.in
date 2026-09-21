@@ -1,0 +1,26 @@
+# replicate_slab.in
+# Lee slab.dat (celda unica con vacio en z) y replica 3x3 en x,y (subido
+# desde 2x2: con el tip r=40A el radio de contacto ~26A quedaba a solo
+# 1.24x su propio radio del limite periodico con 2x2 -> confinamiento
+# artificial que infla H. Con 3x3 el margen sube a ~2.35x).
+# La reconstruccion termica de la superficie se hace DESPUES de replicar
+# (siguiendo el protocolo de Pedone), no antes, para no imponer simetria
+# artificial en la rugosidad de la superficie.
+#
+# Nota: el archivo de salida se sigue llamando slab_2x2.data por compatibilidad
+# con el resto del pipeline (relax_surface.in, create_slab_tip.in), aunque
+# ahora contiene la replica 3x3.
+
+units           metal
+dimension       3
+boundary        p p f
+atom_style      charge
+atom_modify     map yes
+
+read_data       slab.dat
+
+replicate       3 3 1
+
+write_data      slab_2x2.data nocoeff
+
+print "Escrito: slab_2x2.data (3x3 -> ~130500 atomos, superficie SIN relajar)"

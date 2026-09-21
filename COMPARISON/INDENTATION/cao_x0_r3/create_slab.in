@@ -32,7 +32,7 @@ atom_modify     map yes
 
 # extra/atom/types 1: reserva el tipo 6 (C, punta) desde el arranque, para
 # que create_atoms funcione mas adelante sin editar el header a mano.
-read_data       ../../../75SiO2_15-xNa2O_xK2O_10CaO/STAGE1_MELTQUENCH/data/asmelted_723K/AsMelted_723K_x0_r1_PMMCS_rc8p0.data extra/atom/types 1
+read_data       ../../../75SiO2_15-xNa2O_xK2O_10CaO/STAGE1_MELTQUENCH/data/asmelted_723K/AsMelted_723K_x0_r3_PMMCS_rc8p0.data extra/atom/types 1
 
 mass 6 12.011
 

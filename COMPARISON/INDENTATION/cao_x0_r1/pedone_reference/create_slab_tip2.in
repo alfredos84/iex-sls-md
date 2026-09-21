@@ -1,0 +1,40 @@
+# ============================================
+# Slab replicato 2x2 e tip conico di carbonio (r_base = 40 Å)
+# ============================================
+
+units           metal
+dimension       3
+boundary        p p p
+atom_style      charge
+
+# ----- Parametri geometrici -----
+variable alat         equal 3.567     # reticolo diamond per il tip
+variable apex_z       equal 109.0     # posizione apice del tip (z)
+variable tip_height   equal 52.5
+variable base_z       equal ${apex_z}+${tip_height}   # 105 + 25 = 130
+variable tip_radius   equal 40.0      # <-- raggio base doppio (da 20 a 40)
+
+# ----- Legge lo slab -----
+read_data slab.dat
+
+# ----- Replica 2x2 su x e y (z invariato) -----
+replicate 2 2 1
+
+# ----- Centro della box replicata -----
+variable xmid equal xlo + 0.5*lx
+variable ymid equal ylo + 0.5*ly
+
+# ----- Crea il tip (tipo 5 = carbonio) -----
+lattice         diamond ${alat}
+# Cono lungo z, asse in (xmid, ymid), r=0 all'apice (z=apex_z) e r=tip_radius alla base (z=base_z)
+region          tip_cone cone z ${xmid} ${ymid} 0.0 ${tip_radius} ${apex_z} ${base_z} units box
+
+create_atoms    4 region tip_cone
+mass            4 12.011
+set             type 4 charge 0.0
+
+# ----- Salva la struttura combinata -----
+write_data      slab2x2_tip_h52.5_r40.data
+
+print "Creato 'slab2x2_tip_h25_r40.data' con slab replicato 2x2 e tip conico (r_base=40 Å)."
+

@@ -1,0 +1,26 @@
+# create_slab.in — sistema sin Ca, IEX1 completo (xt25), r=1
+# Igual que create_slab.in de noca_x0_r1, pero lee el bulk IEX (STAGE3, 723K,
+# Na->K por sorteo homogeneo en todo el volumen periodico, ya relajado a
+# presion cero via NPT) en vez del bulk AsMelted. Sin gradiente de
+# concentracion (swap homogeneo en todo el bulk).
+#
+# Atomo types: Si=1, O=2, Ca=3 (vacio, sin atomos), Na=4 (resto tras el swap),
+# K=5, C=6 (reservado)
+
+units           metal
+dimension       3
+boundary        p p p
+atom_style      charge
+atom_modify     map yes
+
+read_data       ../../../75SiO2_25-xNa2O_xK2O/STAGE3_IEX_PROTO1/data/iox1_723K/IOX1_723K_xt25_r1_PMMCS_rc8p0.data extra/atom/types 1
+
+mass 6 12.011
+
+replicate       1 1 2
+
+change_box all z final -60.0 440.0 boundary p p f units box
+
+write_data      slab.dat nocoeff
+
+print "Slab escrito: slab.dat (IEX xt25 r1, ~121 A de vidrio, vacio abajo=60 A, arriba=~319 A)"

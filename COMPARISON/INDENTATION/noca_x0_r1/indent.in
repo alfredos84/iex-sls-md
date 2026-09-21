@@ -1,4 +1,4 @@
-# indent.in — Nanoindentación MD sobre vidrio SLS (10CaO, x=0, r=1)
+# indent.in — Nanoindentación MD sobre vidrio SLS sin Ca, x=0, r=1
 # Potencial: PMMCS (vidrio) + Tersoff (C-C) + Buckingham (C-vidrio)
 # Protocolo: equilibración 20 ps → carga 5 nm (100 ps) → hold 100 ps → descarga (100 ps)
 #

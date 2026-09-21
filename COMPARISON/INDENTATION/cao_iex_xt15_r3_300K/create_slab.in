@@ -1,0 +1,31 @@
+# create_slab.in — sistema CaO, IEX1 completo (xt15), r=1
+# Igual que create_slab.in de cao_x0_r1, pero lee el bulk IEX (STAGE3, 723K,
+# Na->K por sorteo homogeneo en todo el volumen periodico, ya relajado a
+# presion cero via NPT) en vez del bulk AsMelted. Sin gradiente de
+# concentracion (confirmado: el swap es homogeneo en todo el bulk, no hay
+# perfil espacial que la caja pudiera resolver de todos modos).
+#
+# Atomo types: Si=1, O=2, Ca=3, Na=4 (resto tras el swap), K=5, C=6 (reservado)
+
+units           metal
+dimension       3
+boundary        p p p
+atom_style      charge
+atom_modify     map yes
+
+# extra/atom/types 1: reserva el tipo 6 (C, punta) desde el arranque.
+read_data       ../../../75SiO2_15-xNa2O_xK2O_10CaO/STAGE7_QUENCH_300K/data/iex1_300K/IEX1_300K_xt15_r3_PMMCS_rc8p0.data extra/atom/types 1
+
+mass 6 12.011
+
+# Duplicar en z mientras la celda sigue totalmente periodica (ver create_slab.in
+# de cao_x0_r1 para el razonamiento completo).
+replicate       1 1 2
+
+# Vacio en ambos lados -- misma extension que cao_x0_r1 (la caja IEX es
+# ~58.9 A de lado, muy similar a los ~57.65 A del AM, sin ajuste adicional).
+change_box all z final -60.0 440.0 boundary p p f units box
+
+write_data      slab.dat nocoeff
+
+print "Slab escrito: slab.dat (IEX xt15 r1, ~118 A de vidrio, vacio abajo=60 A, arriba=~322 A)"

@@ -1,0 +1,35 @@
+# create_slab.in — sistema SIN Ca, x=0 (AM), r=1
+# Lee la caja bulk AM (p p p), la duplica en z (mismo metodo que Pedone usa
+# para crecer lateralmente; ver create_slab.in de cao_x0_r1 para el porque
+# detallado: profundidad libre insuficiente frente al fondo congelado
+# infla artificialmente la rigidez de contacto medida). Escribe slab.dat.
+# Átomo types: Si=1, O=2, Ca=3 (vacío, sin átomos), Na=4, K=5, C=6 (reservado)
+#
+# Caja bulk: ~58.6 Å cúbica, 15000 átomos -> tras "replicate 1 1 2": ~117 Å.
+# Slab: extendemos z a 500 Å para mantener ~3.3x de vacio sobre el vidrio.
+# Con kspace_modify slab 3.0 necesitamos vacío >= 2-3x grosor del slab.
+
+units           metal
+dimension       3
+boundary        p p p
+atom_style      charge
+atom_modify     map yes
+
+# extra/atom/types 1: reserva el tipo 6 (C, punta) desde el arranque, para
+# que create_atoms funcione mas adelante sin editar el header a mano.
+read_data       ../../../75SiO2_25-xNa2O_xK2O/STAGE1_MELTQUENCH/data/asmelted_723K/AsMelted_723K_x0_r1_PMMCS_rc8p0.data extra/atom/types 1
+
+mass 6 12.011
+
+# Duplicar en z MIENTRAS la celda sigue totalmente periodica (p p p, ver
+# arriba) -- replicar en una dimension ya marcada "f" da un warning y no
+# garantiza continuidad fisica en la nueva interfase entre copias.
+replicate       1 1 2
+
+# Vacio en AMBOS lados (no solo arriba) -- ver create_slab.in de cao_x0_r1
+# para la verificacion directa contra el slab.dat real de Pedone.
+change_box all z final -60.0 440.0 boundary p p f units box
+
+write_data      slab.dat nocoeff
+
+print "Slab escrito: slab.dat  (~117 A de vidrio, vacio abajo=60 A, arriba=~322 A)"

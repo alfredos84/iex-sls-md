@@ -89,6 +89,7 @@ fix             IndentForce all ave/time 100 10 1000 v_fz v_zpos file tip_force_
 
 dump            dOV all custom 2000 indent.lammpstrj id type x y z
 dump_modify     dOV sort id
+restart         10000 restart.indent.a restart.indent.b
 
 # Carga: 0.5 Å/ps hacia -z → 5 nm en 100 ps = 100000 pasos
 print "### START LOADING ###"
