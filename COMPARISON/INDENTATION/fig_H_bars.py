@@ -14,11 +14,13 @@ import matplotlib.pyplot as plt
 HERE = Path(__file__).parent
 
 CASES = {
-    "CaO":  {"No IEX": "cao_x0_r{r}",  "IEX": "cao_iex_xt15_r{r}"},
-    "Ca-free": {"No IEX": "noca_x0_r{r}", "IEX": "noca_iex_xt25_r{r}"},
+    "CaO":  {"AM": "cao_x0_r{r}",  "IOX": "cao_iex_xt15_r{r}"},
+    "Ca-free": {"AM": "noca_x0_r{r}", "IOX": "noca_iex_xt25_r{r}"},
 }
-COLORS = {"No IEX": "#1a3a5c", "IEX": "#e08c2a"}
-EXCLUDE = {("Ca-free", "No IEX"): (2,)}
+COLORS = {"AM": "#1a3a5c", "IOX": "#e08c2a"}
+EXCLUDE = {("Ca-free", "AM"): (2,), ("CaO", "AM"): (1,)}
+# CaO No IEX r1 es la muestra piloto original (caja 115 A, 1x1), no comparable con
+# r2/r3 (caja 173 A, 2x2, mismo protocolo que las demas 7 simulaciones) -> excluida.
 
 
 def hardness(folder):
