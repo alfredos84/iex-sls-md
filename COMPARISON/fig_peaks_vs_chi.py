@@ -272,7 +272,7 @@ handles, labels = axes3[0].get_legend_handles_labels()
 fig3.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 0.99),
             ncol=3, fontsize=FS_TEXT, frameon=True, framealpha=0.9, edgecolor='#cccccc')
 fig3.subplots_adjust(top=0.85, wspace=0.18)
-out3 = HERE / 'fig_cn_av_peaks_vs_chi.pdf'
+out3 = HERE / 'fig_cn_av_peaks_pooled_vs_chi.pdf'
 fig3.savefig(out3, dpi=300, bbox_inches='tight')
 fig3.savefig(out3.with_suffix('.png'), dpi=150, bbox_inches='tight')
 print(f"Guardado: {out3.name}")
