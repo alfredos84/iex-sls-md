@@ -112,7 +112,7 @@ for col, (letter, (sys_, title)) in enumerate(zip(letters, [("cao", "10CaO"), ("
     panel_letter(ax, letter)
     ax.set_xlabel(r"$\chi$ (%)", fontsize=FS_LABEL)
     if col == 0:
-        ax.set_ylabel(r"$V_\mathrm{Vor}$ peak (Å$^3$)", fontsize=FS_LABEL)
+        ax.set_ylabel(r"$\langle V_\mathrm{Vor}$ peak$\rangle$ (Å$^3$)", fontsize=FS_LABEL)
     ax.set_ylim(16, 24)
     ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
     ax.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))

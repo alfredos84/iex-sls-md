@@ -131,7 +131,7 @@ for col, (letter, (sys_, title)) in enumerate(zip(("(a)", "(b)"), (("cao", "10Ca
     panel_letter(ax, letter, x=0.97, y=0.97, ha="right")
     ax.set_xlabel(r"$\chi$ (%)", fontsize=FS_LABEL)
     if col == 0:
-        ax.set_ylabel(r"CN$_\mathrm{O}$ peak", fontsize=FS_LABEL)
+        ax.set_ylabel(r"$\langle$CN$_\mathrm{O}$ peak$\rangle$", fontsize=FS_LABEL)
     ax.set_ylim(4, 11)
     ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
     ax.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
