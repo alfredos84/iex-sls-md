@@ -166,7 +166,7 @@ for row in (0, 1):
         if col == 0:
             ax.set_ylabel(ylabels[row], fontsize=FS_LABEL)
         ax.set_title(title, fontsize=FS_LABEL)
-        panel_letter(ax, letters[(row, col)])
+        panel_letter(ax, letters[(row, col)], x=0.97, y=0.97, ha="right")
         if row == 0 and col == 0:
             handles = ax.get_legend_handles_labels()
 

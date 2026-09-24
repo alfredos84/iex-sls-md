@@ -54,6 +54,6 @@ def style_axes(ax):
         sp.set_linewidth(0.8)
 
 
-def panel_letter(ax, letter, x=0.03, y=0.97, va="top"):
-    ax.text(x, y, letter, transform=ax.transAxes, ha="left", va=va,
+def panel_letter(ax, letter, x=0.03, y=0.97, va="top", ha="left"):
+    ax.text(x, y, letter, transform=ax.transAxes, ha=ha, va=va,
             fontsize=FS_TEXT, fontweight="bold", zorder=6)
