@@ -117,6 +117,10 @@ for ix, (XX, (xna_c, xka_c, xt_c, xna_n, xka_n, xt_n)) in enumerate(sorted(XX_CO
         m, s = series_stats(d, pat, x, ctype, rcut)
         stats[sys_][key][:, ix] = (m[0], s[0], m[1], s[1])
 
+# En chi=100 no hay Na: XX_CONFIG usa x=0 como relleno -> no es un dato de chi=100
+for _s in KEYS:
+    stats[_s]['na'][:, -1] = np.nan
+
 import sys
 sys.path.insert(0, str(HERE.parent))
 from paper_style import BOX, FS_LABEL, FS_TEXT, apply_rcparams, make_fig, panel_letter, relabel

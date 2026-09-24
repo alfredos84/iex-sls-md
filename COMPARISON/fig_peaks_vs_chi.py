@@ -171,6 +171,8 @@ for d in (cn_pk, cn_pk_av, vol_pk):
     for sys in ('cao', 'noca'):
         for s in ('na', 'ka', 'ki'):
             d[sys][s] = np.array(d[sys][s], dtype=float)
+        # En chi=100 no hay Na (todo K): XX_CONFIG usa x=0 como relleno -> no es un dato de chi=100
+        d[sys]['na'][-1] = np.nan
 
 # ── Plot helpers ──────────────────────────────────────────────────────────────
 
@@ -190,6 +192,8 @@ SERIES = [
 
 
 def plot_with_fit(ax, chi, y, color, marker, label):
+    ok = ~np.isnan(y)
+    chi, y = chi[ok], y[ok]
     ax.plot(chi, y, color=color, marker=marker, ls='none',
             ms=6, mew=0.8, label=label, zorder=3)
     m, b = np.polyfit(chi, y, 1)

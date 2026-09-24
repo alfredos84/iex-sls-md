@@ -98,10 +98,14 @@ for col, (letter, (sys_, title)) in enumerate(zip(letters, [("cao", "10CaO"), ("
     for key, color, marker, label in SERIES:
         y = np.array(mean[sys_][key])
         e = np.array(sd[sys_][key])
-        ax.errorbar(CHI, y, yerr=e, color=color, marker=marker, ls="none", ms=6, mew=0.8,
+        if key == "na":      # en chi=100 no hay Na: el x=0 de relleno no es un dato de chi=100
+            y[-1] = np.nan
+        ok = ~np.isnan(y)
+        xc, y, e = CHI[ok], y[ok], e[ok]
+        ax.errorbar(xc, y, yerr=e, color=color, marker=marker, ls="none", ms=6, mew=0.8,
                     capsize=3, elinewidth=1.0, label=label, zorder=3)
-        m, b = np.polyfit(CHI, y, 1)
-        xf = np.linspace(CHI.min(), CHI.max(), 200)
+        m, b = np.polyfit(xc, y, 1)
+        xf = np.linspace(xc.min(), xc.max(), 200)
         ax.plot(xf, m * xf + b, color=color, lw=1.4, label="_nolegend_", zorder=2)
     ax.text(0.5, 18.75, title, transform=ax.get_yaxis_transform(), ha="center", va="center",
             fontsize=FS_LABEL, zorder=5)
