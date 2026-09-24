@@ -155,37 +155,35 @@ fit_noca = a_noca * np.log(xrel_fit) + b_noca
 
 # ── Figura ────────────────────────────────────────────────────────────────────
 
-plt.rcParams.update({
-    'font.family':     'Times New Roman',
-    'font.size':       14,
-    'axes.linewidth':  0.8,
-    'xtick.direction': 'out',
-    'ytick.direction': 'out',
-})
+import sys
+sys.path.insert(0, str(HERE))
+from paper_style import BOX, FS_LABEL, FS_TEXT, apply_rcparams, relabel
+apply_rcparams()
 
 C_AM       = 'black'
 C_IEX1     = '#e74c3c'   # rojo claro — CaO
 C_IEX1_DARK= '#7b241c'   # rojo oscuro — Ca-free
 
-fig, ax = plt.subplots(figsize=(6.5, 6.5))
+fig, ax = plt.subplots(figsize=(BOX, BOX))
+ax.set_box_aspect(1)
 
 # Líneas AM horizontales
-ax.axhline(LNDC_cao_am,  color=C_AM, ls='-',  lw=1.8, label='AM — 10CaO',   zorder=2)
-ax.axhline(LNDC_noca_am, color=C_AM, ls='--', lw=1.8, label='AM — Ca-free', zorder=2)
+ax.axhline(LNDC_cao_am,  color=C_AM, ls='-',  lw=1.8, label=relabel('AM — 10CaO'),   zorder=2)
+ax.axhline(LNDC_noca_am, color=C_AM, ls='--', lw=1.8, label=relabel('AM — Ca-free'), zorder=2)
 
 # Puntos IEX1 con barras de error
 KW = dict(ms=7, lw=0, capsize=3, capthick=1.0, elinewidth=0.8)
 ax.errorbar(XREL_CAO_IEX1,  LNDC_cao_iex1,  yerr=LNDC_cao_err,
-            marker='s', color=C_IEX1,      label='IEX1 — 10CaO',   zorder=4, **KW)
+            marker='s', color=C_IEX1,      label=relabel('IEX1 — 10CaO'),   zorder=4, **KW)
 ax.errorbar(XREL_NOCA_IEX1, LNDC_noca_iex1, yerr=LNDC_noca_err,
-            marker='^', color=C_IEX1_DARK, label='IEX1 — Ca-free',  zorder=4, **KW)
+            marker='^', color=C_IEX1_DARK, label=relabel('IEX1 — Ca-free'),  zorder=4, **KW)
 
 # Ajustes logarítmicos (sin entrada en leyenda)
 ax.plot(xrel_fit, fit_cao,  color=C_IEX1,      lw=1.2, ls='-',  zorder=3, label='_nolegend_')
 ax.plot(xrel_fit, fit_noca, color=C_IEX1_DARK, lw=1.2, ls='--', zorder=3, label='_nolegend_')
 
-ax.set_xlabel(r'$\chi$ (%)', fontsize=14)
-ax.set_ylabel(r'LNDC (ppk mol%$^{-1}$)', fontsize=14)
+ax.set_xlabel(r'$\chi$ (%)', fontsize=FS_LABEL)
+ax.set_ylabel(r'LNDC (ppk mol%$^{-1}$)', fontsize=FS_LABEL)
 
 ax.set_xlim(-0.03, 1.03)
 ax.set_xticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
@@ -194,13 +192,13 @@ ax.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
 ax.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
 ax.set_ylim(bottom=0)
 
-ax.tick_params(labelsize=12, which='both')
+ax.tick_params(labelsize=FS_TEXT, which='both')
 ax.grid(lw=0.35, color='#dddddd', zorder=0)
 for spine in ax.spines.values():
     spine.set_visible(True)
     spine.set_linewidth(0.8)
 
-ax.legend(fontsize=11, frameon=True, framealpha=0.9,
+ax.legend(fontsize=FS_TEXT, frameon=True, framealpha=0.9,
           edgecolor='#cccccc', loc='lower right')
 
 # Eje secundario: % del LNDC AM — referencia = CaO AM (línea sólida en 100%)
@@ -210,11 +208,10 @@ ax2 = ax.twinx()
 ax2.set_ylim(0, ymax / LNDC_am_ref * 100.0)
 pct_ticks = [0, 20, 40, 60, 80, 100]
 ax2.set_yticks(pct_ticks)
-ax2.set_yticklabels([f'{p}%' for p in pct_ticks], fontsize=12)
-ax2.set_ylabel('% of As-melted LNDC', fontsize=14)
-ax2.tick_params(labelsize=12)
+ax2.set_yticklabels([f'{p}%' for p in pct_ticks], fontsize=FS_TEXT)
+ax2.set_ylabel(relabel('% of As-melted LNDC'), fontsize=FS_LABEL)
+ax2.tick_params(labelsize=FS_TEXT)
 
-fig.tight_layout()
 fig.savefig(HERE / 'fig_LNDC_IEX1_comparison.pdf', dpi=300, bbox_inches='tight')
 fig.savefig(HERE / 'fig_LNDC_IEX1_comparison.png', dpi=150, bbox_inches='tight')
 print(f"\nGuardado: {HERE / 'fig_LNDC_IEX1_comparison.pdf'}")

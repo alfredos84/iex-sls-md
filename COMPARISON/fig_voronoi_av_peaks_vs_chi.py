@@ -79,23 +79,22 @@ for XX, (xna_cao, xka_cao, xt_cao, xna_noca, xka_noca, xt_noca) in sorted(XX_CON
         mean[sys_][key].append(m)
         sd[sys_][key].append(s)
 
-plt.rcParams.update({
-    "font.family":     "Times New Roman",
-    "font.size":       14,
-    "axes.linewidth":  0.8,
-    "xtick.direction": "out",
-    "ytick.direction": "out",
-})
+import sys
+sys.path.insert(0, str(HERE))
+from paper_style import BOX, FS_LABEL, FS_TEXT, apply_rcparams, make_fig, panel_letter, relabel
+apply_rcparams()
 
 SERIES = [
-    ("na", "#1a3a5c", "o", "Na (As-Melted)"),
-    ("ka", "#2ca0c4", "s", "K (As-Melted)"),
-    ("ki", "#c0392b", "^", "K (Ion-Exchanged)"),
+    ("na", "#1a3a5c", "o", relabel("Na (As-Melted)")),
+    ("ka", "#2ca0c4", "s", relabel("K (As-Melted)")),
+    ("ki", "#c0392b", "^", relabel("K (Ion-Exchanged)")),
 ]
 
-fig, axes = plt.subplots(1, 2, figsize=(9, 4.5))
-for col, (sys_, title) in enumerate([("cao", "10CaO"), ("noca", "Ca-free")]):
+fig, axes = make_fig(1, 2)
+letters = ["(a)", "(b)"]
+for col, (letter, (sys_, title)) in enumerate(zip(letters, [("cao", "10CaO"), ("noca", "Ca-free")])):
     ax = axes[col]
+    title = relabel(title)
     for key, color, marker, label in SERIES:
         y = np.array(mean[sys_][key])
         e = np.array(sd[sys_][key])
@@ -104,23 +103,24 @@ for col, (sys_, title) in enumerate([("cao", "10CaO"), ("noca", "Ca-free")]):
         m, b = np.polyfit(CHI, y, 1)
         xf = np.linspace(CHI.min(), CHI.max(), 200)
         ax.plot(xf, m * xf + b, color=color, lw=1.4, label="_nolegend_", zorder=2)
-    ax.set_title(title, fontsize=13)
-    ax.set_xlabel(r"$\chi$ (%)", fontsize=13)
-    ax.set_ylabel(r"$V_\mathrm{Vor}$ peak (Å$^3$)", fontsize=13)
+    ax.set_title(title, fontsize=FS_LABEL)
+    panel_letter(ax, letter)
+    ax.set_xlabel(r"$\chi$ (%)", fontsize=FS_LABEL)
+    ax.set_ylabel(r"$V_\mathrm{Vor}$ peak (Å$^3$)", fontsize=FS_LABEL)
     ax.set_ylim(16, 24)
     ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
     ax.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
     ax.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
-    ax.tick_params(labelsize=11, which="both")
+    ax.tick_params(labelsize=FS_TEXT, which="both")
     ax.grid(lw=0.35, color="#dddddd", zorder=0)
     for spine in ax.spines.values():
         spine.set_visible(True)
         spine.set_linewidth(0.8)
 
 handles, labels = axes[0].get_legend_handles_labels()
-fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 1.04), ncol=3, fontsize=11,
+fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 1.05), ncol=3, fontsize=FS_TEXT,
            frameon=True, framealpha=0.9, edgecolor="#cccccc")
-fig.tight_layout(rect=[0, 0, 1, 0.94])
+fig.subplots_adjust(top=0.86, wspace=0.32)
 out = HERE / "fig_voronoi_av_peaks_vs_chi.pdf"
 fig.savefig(out, dpi=300, bbox_inches="tight")
 fig.savefig(out.with_suffix(".png"), dpi=150, bbox_inches="tight")

@@ -117,43 +117,27 @@ for ix, (XX, (xna_c, xka_c, xt_c, xna_n, xka_n, xt_n)) in enumerate(sorted(XX_CO
         m, s = series_stats(d, pat, x, ctype, rcut)
         stats[sys_][key][:, ix] = (m[0], s[0], m[1], s[1])
 
-plt.rcParams.update({
-    "font.family":     "Times New Roman",
-    "font.size":       17,
-    "axes.linewidth":  0.8,
-    "xtick.direction": "out",
-    "ytick.direction": "out",
-})
+import sys
+sys.path.insert(0, str(HERE.parent))
+from paper_style import BOX, FS_LABEL, FS_TEXT, apply_rcparams, make_fig, panel_letter, relabel
+apply_rcparams()
 
 SERIES = {
-    "na": ("#1a3a5c", "o", "Na (As-Melted)"),
-    "ka": ("#2ca0c4", "s", "K (As-Melted)"),
-    "ki": ("#c0392b", "^", "K (Ion-Exchanged)"),
-    "ca": ("#7b3f00", "D", "Ca (As-Melted)"),
+    "na": ("#1a3a5c", "o", relabel("Na (As-Melted)")),
+    "ka": ("#2ca0c4", "s", relabel("K (As-Melted)")),
+    "ki": ("#c0392b", "^", relabel("K (Ion-Exchanged)")),
+    "ca": ("#7b3f00", "D", relabel("Ca (As-Melted)")),
 }
-TICK_FS, LABEL_AX_FS, TITLE_FS, LETTER_FS = 16, 19, 20, 20
 
-# Geometria (pulgadas): paneles 2:1
-PW = 7.6
-PH = PW / 2.0
-LM, GAP_X, RM = 1.45, 0.75, 0.3
-TM, GAP_Y, BM = 1.05, 0.62, 0.95
-W = LM + 2 * PW + GAP_X + RM
-H = TM + 2 * PH + GAP_Y + BM
-
-YLIMS = {(0, "cao"): None, (0, "noca"): None, (1, "cao"): None, (1, "noca"): None}   # auto
-
-fig = plt.figure(figsize=(W, H))
+fig, axes = make_fig(2, 2)
 letters = {(0, 0): "(a)", (0, 1): "(b)", (1, 0): "(c)", (1, 1): "(d)"}
 ylabels = {0: r"$\langle$CN$_\mathrm{BO}\rangle$", 1: r"$\langle$CN$_\mathrm{NBO}\rangle$"}
 handles = None
 
 for row in (0, 1):
     for col, (sys_, title) in enumerate((("cao", "10CaO"), ("noca", "Ca-free"))):
-        x0 = LM + col * (PW + GAP_X)
-        y0 = BM + (1 - row) * (PH + GAP_Y)
-        ax = fig.add_axes([x0 / W, y0 / H, PW / W, PH / H])
-        ymin, ymax = np.inf, -np.inf
+        ax = axes[row, col]
+        title = relabel(title)
         for key in KEYS[sys_]:
             color, marker, label = SERIES[key]
             m = stats[sys_][key][2 * row]
@@ -164,58 +148,32 @@ for row in (0, 1):
             slope, icpt = np.polyfit(CHI[ok], m[ok], 1)
             xf = np.linspace(CHI[ok].min(), CHI[ok].max(), 200)
             ax.plot(xf, slope * xf + icpt, color=color, lw=1.6, label="_nolegend_", zorder=2)
-            ymin = min(ymin, np.nanmin(m[ok] - e[ok]))
-            ymax = max(ymax, np.nanmax(m[ok] + e[ok]))
-        pad = 0.07 * (ymax - ymin)
-        ax.set_ylim(ymin - pad, ymax + pad)
         ax.set_xlim(8, 112)
         ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
         ax.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
         ax.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
-        ax.tick_params(labelsize=TICK_FS, which="both")
+        ax.tick_params(labelsize=FS_TEXT, which="both")
         ax.grid(lw=0.35, color="#dddddd", zorder=0)
         for sp in ax.spines.values():
             sp.set_visible(True)
             sp.set_linewidth(0.8)
         if row == 1:
-            ax.set_xlabel(r"$\chi$ (%)", fontsize=LABEL_AX_FS)
+            ax.set_xlabel(r"$\chi$ (%)", fontsize=FS_LABEL)
         if col == 0:
-            fig.text((x0 - 1.05) / W, (y0 + PH / 2) / H, ylabels[row], rotation=90, ha="center", va="center",
-                     fontsize=LABEL_AX_FS)
-        # titulo centrado en x, en el hueco vertical libre mas grande de la zona central (chi = 40..80)
-        y_lo, y_hi = ax.get_ylim()
-        rng = y_hi - y_lo
-        busy = []
-        for key in KEYS[sys_]:
-            m = stats[sys_][key][2 * row]
-            e = stats[sys_][key][2 * row + 1]
-            for i in (1, 2, 3):
-                if not np.isnan(m[i]):
-                    busy.append((m[i] - e[i] - 0.03 * rng, m[i] + e[i] + 0.03 * rng))
-        busy.sort()
-        merged = []
-        for lo_, hi_ in busy:
-            if merged and lo_ <= merged[-1][1]:
-                merged[-1][1] = max(merged[-1][1], hi_)
-            else:
-                merged.append([lo_, hi_])
-        edges = [y_lo] + [v for seg in merged for v in seg] + [y_hi]
-        gaps = [(edges[k], edges[k + 1]) for k in range(0, len(edges), 2)]
-        g_lo, g_hi = max(gaps, key=lambda g: g[1] - g[0])
-        ax.text(0.5, 0.5 * (g_lo + g_hi), title, transform=ax.get_yaxis_transform(), ha="center",
-                va="center", fontsize=TITLE_FS, zorder=5)
-        ax.text(0.012, 0.975, letters[(row, col)], transform=ax.transAxes, ha="left", va="top",
-                fontsize=LETTER_FS, fontweight="bold", zorder=5)
+            ax.set_ylabel(ylabels[row], fontsize=FS_LABEL)
+        ax.set_title(title, fontsize=FS_LABEL)
+        panel_letter(ax, letters[(row, col)])
         if row == 0 and col == 0:
             handles = ax.get_legend_handles_labels()
 
-fig.legend(*handles, loc="upper center", bbox_to_anchor=(0.5, 0.995), ncol=4, fontsize=17,
+fig.legend(*handles, loc="upper center", bbox_to_anchor=(0.5, 0.995), ncol=4, fontsize=FS_TEXT,
            frameon=True, framealpha=0.9, edgecolor="#cccccc")
+fig.subplots_adjust(top=0.92, wspace=0.18, hspace=0.18)
 
 out = HERE / "fig_bo_nbo_av_vs_chi.pdf"
 fig.savefig(out, dpi=300, bbox_inches="tight")
 fig.savefig(out.with_suffix(".png"), dpi=150, bbox_inches="tight")
-print(f"Guardado: {out.name}  (paneles {PW:.2f} x {PH:.2f} in = 2:1)")
+print(f"Guardado: {out.name}")
 
 for sys_ in KEYS:
     for key in KEYS[sys_]:

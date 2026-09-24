@@ -140,39 +140,37 @@ for i, x in enumerate(X_CAO_AM):
 
 # ── Figura ────────────────────────────────────────────────────────────────────
 
-plt.rcParams.update({
-    'font.family':     'Times New Roman',
-    'font.size':       14,
-    'axes.linewidth':  0.8,
-    'xtick.direction': 'out',
-    'ytick.direction': 'out',
-})
+import sys
+sys.path.insert(0, str(HERE))
+from paper_style import BOX, FS_LABEL, FS_TEXT, apply_rcparams, style_axes, relabel
+apply_rcparams()
 
 C_AM        = 'black'
 C_IEX1      = '#e74c3c'   # rojo claro — CaO
 C_IEX1_DARK = '#7b241c'   # rojo oscuro — Ca-free
 KW = dict(ms=7, lw=1.5, capsize=3, capthick=1.0, elinewidth=0.8)
 
-fig, ax = plt.subplots(figsize=(6.5, 6.5))
+fig, ax = plt.subplots(figsize=(BOX, BOX))
+ax.set_box_aspect(1)
 
 # CaO (cuadrados, sólido)
 ax.errorbar(XREL_CAO_AM,   Vm_cao_am_m,   yerr=Vm_cao_am_s,
             color=C_AM,   marker='s', ls='-',
-            label=r'AM — 10CaO',  zorder=3, **KW)
+            label=relabel('AM — 10CaO'),  zorder=3, **KW)
 ax.errorbar(XREL_CAO_IEX1, Vm_cao_iex1_m, yerr=Vm_cao_iex1_s,
             color=C_IEX1, marker='s', ls='-',
-            label=r'IEX1 — 10CaO',  zorder=4, **KW)
+            label=relabel('IEX1 — 10CaO'),  zorder=4, **KW)
 
 # Ca-free (triángulos, discontinuo)
 ax.errorbar(XREL_NOCA_AM,   Vm_noca_am_m,   yerr=Vm_noca_am_s,
             color=C_AM,   marker='^', ls='--',
-            label=r'AM — Ca-free',   zorder=3, **KW)
+            label=relabel('AM — Ca-free'),   zorder=3, **KW)
 ax.errorbar(XREL_NOCA_IEX1, Vm_noca_iex1_m, yerr=Vm_noca_iex1_s,
             color=C_IEX1_DARK, marker='^', ls='--',
-            label=r'IEX1 — Ca-free', zorder=4, **KW)
+            label=relabel('IEX1 — Ca-free'), zorder=4, **KW)
 
-ax.set_xlabel(r'$\chi$ (%)', fontsize=14)
-ax.set_ylabel(r'Molar Volume (cm$^3$ mol$^{-1}$)', fontsize=14)
+ax.set_xlabel(r'$\chi$ (%)', fontsize=FS_LABEL)
+ax.set_ylabel(r'Molar volume (cm$^3$ mol$^{-1}$)', fontsize=FS_LABEL)
 
 ax.set_xlim(-0.03, 1.03)
 ax.set_xticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
@@ -180,7 +178,7 @@ ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f'{v*100:.0f}'))
 ax.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
 ax.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
 
-ax.tick_params(labelsize=12, which='both')
+ax.tick_params(labelsize=FS_TEXT, which='both')
 
 for spine in ax.spines.values():
     spine.set_visible(True)
@@ -188,7 +186,7 @@ for spine in ax.spines.values():
 
 ax.grid(lw=0.35, color='#dddddd', zorder=0)
 
-ax.legend(fontsize=11, frameon=True, framealpha=0.9,
+ax.legend(fontsize=FS_TEXT, frameon=True, framealpha=0.9,
           edgecolor='#cccccc', loc='best')
 
 fig.tight_layout()

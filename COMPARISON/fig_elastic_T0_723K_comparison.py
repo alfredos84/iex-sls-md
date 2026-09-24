@@ -81,13 +81,10 @@ noca_iex1_m, noca_iex1_s = load_iex1(X_NOCA_IEX1, NOCA_IEX1_RES,
 
 # ── Figura ────────────────────────────────────────────────────────────────────
 
-plt.rcParams.update({
-    'font.family':     'Times New Roman',
-    'font.size':       14,
-    'axes.linewidth':  0.8,
-    'xtick.direction': 'out',
-    'ytick.direction': 'out',
-})
+import sys
+sys.path.insert(0, str(HERE))
+from paper_style import BOX, FS_LABEL, FS_TEXT, apply_rcparams, make_fig, panel_letter, relabel
+apply_rcparams()
 
 C_AM        = 'black'
 C_IEX1      = '#e74c3c'   # rojo claro — CaO
@@ -97,45 +94,47 @@ KW = dict(ms=7, lw=1.5, capsize=3, capthick=1.0, elinewidth=0.8)
 props   = [2, 0, 1, 3]          # E, K, G, nu  (índices en columnas cargadas)
 ylabels = [r'$E$ (GPa)', r'$K$ (GPa)', r'$G$ (GPa)', r'$\nu$']
 
-fig, axes = plt.subplots(2, 2, figsize=(11, 10))
+fig, axes = make_fig(2, 2)
 axes = axes.flatten()
+letters = ['(a)', '(b)', '(c)', '(d)']
 
-for ax, pi, ylabel in zip(axes, props, ylabels):
+for ax, pi, ylabel, letter in zip(axes, props, ylabels, letters):
 
     ax.errorbar(XREL_CAO_AM,   cao_am_m[:,pi],   yerr=cao_am_s[:,pi],
-                color=C_AM,   marker='s', ls='-',  label='AM — 10CaO',   zorder=3, **KW)
+                color=C_AM,   marker='s', ls='-',  label=relabel('AM — 10CaO'),   zorder=3, **KW)
     ax.errorbar(XREL_CAO_IEX1, cao_iex1_m[:,pi], yerr=cao_iex1_s[:,pi],
-                color=C_IEX1,      marker='s', ls='-',  label='IEX1 — 10CaO',   zorder=4, **KW)
+                color=C_IEX1,      marker='s', ls='-',  label=relabel('IEX1 — 10CaO'),   zorder=4, **KW)
     ax.errorbar(XREL_NOCA_AM,   noca_am_m[:,pi],   yerr=noca_am_s[:,pi],
-                color=C_AM,        marker='^', ls='--', label='AM — Ca-free',    zorder=3, **KW)
+                color=C_AM,        marker='^', ls='--', label=relabel('AM — Ca-free'),    zorder=3, **KW)
     ax.errorbar(XREL_NOCA_IEX1, noca_iex1_m[:,pi], yerr=noca_iex1_s[:,pi],
-                color=C_IEX1_DARK, marker='^', ls='--', label='IEX1 — Ca-free', zorder=4, **KW)
+                color=C_IEX1_DARK, marker='^', ls='--', label=relabel('IEX1 — Ca-free'), zorder=4, **KW)
 
-    ax.set_ylabel(ylabel, fontsize=14)
+    ax.set_ylabel(ylabel, fontsize=FS_LABEL)
     ax.set_xlim(-0.03, 1.03)
     ax.set_xticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f'{v*100:.0f}'))
     ax.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
     ax.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
-    ax.tick_params(labelsize=12, which='both')
+    ax.tick_params(labelsize=FS_TEXT, which='both')
     ax.grid(lw=0.35, color='#dddddd', zorder=0)
     for spine in ax.spines.values():
         spine.set_visible(True)
         spine.set_linewidth(0.8)
+    panel_letter(ax, letter)
 
 # x label solo en fila inferior
 for ax in axes[2:]:
-    ax.set_xlabel(r'$\chi$ (%)', fontsize=14)
+    ax.set_xlabel(r'$\chi$ (%)', fontsize=FS_LABEL)
 
-fig.tight_layout(rect=[0, 0, 1, 0.93])
+fig.subplots_adjust(top=0.92, wspace=0.18, hspace=0.18)
 
 # Leyenda horizontal compartida, encima de los 4 paneles
 handles, labels = axes[0].get_legend_handles_labels()
 fig.legend(handles, labels,
            loc='upper center', ncol=4,
-           fontsize=11, frameon=True, framealpha=0.9,
+           fontsize=FS_TEXT, frameon=True, framealpha=0.9,
            edgecolor='#cccccc',
-           bbox_to_anchor=(0.5, 0.97))
+           bbox_to_anchor=(0.5, 0.995))
 fig.savefig(HERE / 'fig_elastic_T0_723K_comparison.pdf', dpi=300, bbox_inches='tight')
 fig.savefig(HERE / 'fig_elastic_T0_723K_comparison.png', dpi=150, bbox_inches='tight')
 print(f"Guardado: {HERE / 'fig_elastic_T0_723K_comparison.pdf'}")

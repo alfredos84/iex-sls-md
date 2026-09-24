@@ -114,13 +114,10 @@ for ix, (XX, (xna_cao, xka_cao, xt_cao, xna_noca, xka_noca, xt_noca)) in enumera
             stats[sys_][st][t][0][ix] = np.mean([a.mean() for a in arrs])
             stats[sys_][st][t][1][ix] = np.mean([fwhm(a) for a in arrs])
 
-plt.rcParams.update({
-    "font.family":     "Times New Roman",
-    "font.size":       17,
-    "axes.linewidth":  0.8,
-    "xtick.direction": "out",
-    "ytick.direction": "out",
-})
+import sys
+sys.path.insert(0, str(HERE.parent))
+from paper_style import BOX, FS_LABEL, FS_TEXT, apply_rcparams, relabel
+apply_rcparams()
 
 # (tipo, nombre, color AM, color IEX): dos tonos por especie
 MOD_SERIES = [
@@ -132,15 +129,16 @@ SI_SERIES = [(TYPE_SI, "Si", "#8e44ad", "#b07cc9")]
 O_SERIES = [(TYPE_O, "O", "#27ae60", "#5fd18d")]
 OFFSET_PT = 11.5
 XSHIFT_PT = 11.5
-LABEL_FS = 12.5
-TICK_FS = 16
-LABEL_AX_FS = 19
-TITLE_FS = 20
-LETTER_FS = 20
+LABEL_FS = FS_TEXT
+TICK_FS = FS_TEXT
+LABEL_AX_FS = FS_LABEL
+TITLE_FS = FS_LABEL
+LETTER_FS = FS_TEXT
 
-# Geometria (pulgadas): paneles 2:1
-PW = 7.6
-PH = PW / 2.0
+# Geometria (pulgadas): cada "box" (a)-(d) es cuadrado de lado BOX;
+# fila 1 (c,d) reparte ese mismo cuadrado en dos sub-paneles (O arriba, Si abajo).
+PW = BOX
+PH = BOX
 LM, GAP_X, RM = 1.45, 0.75, 0.3
 TM, GAP_Y, BM = 1.05, 0.62, 0.95
 BREAK_GAP = 0.13
@@ -170,7 +168,7 @@ def draw_series(ax, sys_, series):
             m, w = stats[sys_][st][t]
             ok = ~np.isnan(m)
             ax.plot(CHI[ok], m[ok], color=color, marker=marker, ls=ls, ms=6.5, lw=1.6,
-                    label=f"{name} ({tag})", zorder=3)
+                    label=relabel(f"{name} ({tag})"), zorder=3)
             for ix in np.where(ok)[0]:
                 items.append((ix, m[ix], darker(color), w[ix], st))
     return items
@@ -231,7 +229,7 @@ fig = plt.figure(figsize=(W, H))
 pending = []          # (ax, items, ylim) para colocar numeros al final
 handles = {}
 
-for col, (sys_, title) in enumerate((("cao", "10CaO"), ("noca", "Ca-free"))):
+for col, (sys_, title) in enumerate((("cao", relabel("10CaO")), ("noca", "Ca-free"))):
     # --- fila 0: modificadores ---
     x0, y0 = panel_origin(col, 0)
     ax = add_axes_in(x0, y0, PW, PH)

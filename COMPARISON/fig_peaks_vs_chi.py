@@ -174,21 +174,18 @@ for d in (cn_pk, cn_pk_av, vol_pk):
 
 # ── Plot helpers ──────────────────────────────────────────────────────────────
 
-plt.rcParams.update({
-    'font.family':     'Times New Roman',
-    'font.size':       14,
-    'axes.linewidth':  0.8,
-    'xtick.direction': 'out',
-    'ytick.direction': 'out',
-})
+import sys
+sys.path.insert(0, str(HERE))
+from paper_style import BOX, FS_LABEL, FS_TEXT, apply_rcparams, make_fig, panel_letter, relabel
+apply_rcparams()
 
 C_NA = '#1a3a5c'
 C_KA = '#2ca0c4'
 C_KI = '#c0392b'
 SERIES = [
-    ('na', C_NA, 'o', 'Na (As-Melted)'),
-    ('ka', C_KA, 's', 'K (As-Melted)'),
-    ('ki', C_KI, '^', 'K (Ion-Exchanged)'),
+    ('na', C_NA, 'o', relabel('Na (As-Melted)')),
+    ('ka', C_KA, 's', relabel('K (As-Melted)')),
+    ('ki', C_KI, '^', relabel('K (Ion-Exchanged)')),
 ]
 
 
@@ -201,14 +198,14 @@ def plot_with_fit(ax, chi, y, color, marker, label):
 
 
 def decorate(ax, ylabel, ylim=None):
-    ax.set_xlabel(r'$\chi$ (%)', fontsize=13)
-    ax.set_ylabel(ylabel, fontsize=13)
+    ax.set_xlabel(r'$\chi$ (%)', fontsize=FS_LABEL)
+    ax.set_ylabel(ylabel, fontsize=FS_LABEL)
     if ylim is not None:
         ax.set_ylim(*ylim)
     ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
     ax.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
     ax.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
-    ax.tick_params(labelsize=11, which='both')
+    ax.tick_params(labelsize=FS_TEXT, which='both')
     ax.grid(lw=0.35, color='#dddddd', zorder=0)
     for sp in ax.spines.values():
         sp.set_visible(True); sp.set_linewidth(0.8)
@@ -256,18 +253,21 @@ plt.close(fig2)
 
 # ── Figura 3: CN_O peaks (r_cut promedio IEX) vs χ ───────────────────────────
 
-fig3, axes3 = plt.subplots(1, 2, figsize=(9, 4.5))
-for col, (sys, title) in enumerate([('cao', r'10CaO'), ('noca', r'Ca-free')]):
+fig3, axes3 = make_fig(1, 2)
+letters3 = ['(a)', '(b)']
+for col, (letter, (sys, title)) in enumerate(zip(letters3, [('cao', r'10CaO'), ('noca', r'Ca-free')])):
     ax = axes3[col]
+    title = relabel(title)
     for key, color, marker, label in SERIES:
         plot_with_fit(ax, CHI, cn_pk_av[sys][key], color, marker, label)
-    ax.set_title(title, fontsize=13)
+    ax.set_title(title, fontsize=FS_LABEL)
+    panel_letter(ax, letter)
     decorate(ax, r'CN$_\mathrm{O}$ peak', ylim=(4, 11))
 
 handles, labels = axes3[0].get_legend_handles_labels()
-fig3.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.04),
-            ncol=3, fontsize=11, frameon=True, framealpha=0.9, edgecolor='#cccccc')
-fig3.tight_layout(rect=[0, 0, 1, 0.94])
+fig3.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 0.99),
+            ncol=3, fontsize=FS_TEXT, frameon=True, framealpha=0.9, edgecolor='#cccccc')
+fig3.subplots_adjust(top=0.85, wspace=0.18)
 out3 = HERE / 'fig_cn_av_peaks_vs_chi.pdf'
 fig3.savefig(out3, dpi=300, bbox_inches='tight')
 fig3.savefig(out3.with_suffix('.png'), dpi=150, bbox_inches='tight')
