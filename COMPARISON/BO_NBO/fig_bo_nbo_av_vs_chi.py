@@ -153,7 +153,7 @@ for row in (0, 1):
             xf = np.linspace(CHI[ok].min(), CHI[ok].max(), 200)
             ax.plot(xf, slope * xf + icpt, color=color, lw=1.6, label="_nolegend_", zorder=2)
         ax.set_xlim(8, 112)
-        ax.set_ylim(1, 6)
+        ax.set_ylim(0.5, 5.5) if row == 0 else ax.set_ylim(3, 5)
         ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
         ax.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
         ax.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
