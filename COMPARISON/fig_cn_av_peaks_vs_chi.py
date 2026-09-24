@@ -6,7 +6,8 @@ Para cada chi, serie y replica (r=1,2,3) se calcula la moda de la distribucion d
 cationes (O dentro del radio de corte). Punto = media de las 3 modas; barra de error =
 desviacion estandar muestral (n-1) entre replicas. Ajuste lineal sobre las medias.
 
-Radios de corte: Na-O 3.21 A, K-O 3.77 A (AM), K-O 3.49 A (IOX; promedio Na/K).
+Radios de corte: Na-O 3.21 A, K-O 3.77 A (AM), K-O 3.49 A (IOX; promedio Na/K), Ca-O 3.20 A
+(mismos que fig_bo_nbo_av_vs_chi). Ca solo en el vidrio con Ca (composiciones AM x = xka).
 El Na solo se muestra en chi = 20-80 (en chi = 100 no hay Na; XX_CONFIG usa x=0 de relleno).
 2 paneles: Ca | Ca-free.
 """
@@ -30,9 +31,9 @@ CAO_IEX1_DIR  = BASE / "75SiO2_15-xNa2O_xK2O_10CaO" / "STAGE3_IEX_PROTO1" / "dat
 NOCA_AM_DIR   = BASE / "75SiO2_25-xNa2O_xK2O"        / "STAGE1_MELTQUENCH" / "data" / "asmelted_723K"
 NOCA_IEX1_DIR = BASE / "75SiO2_25-xNa2O_xK2O"        / "STAGE3_IEX_PROTO1" / "data" / "iox1_723K"
 
-RCUT_NA, RCUT_K = 3.21, 3.77
+RCUT_NA, RCUT_K, RCUT_CA = 3.21, 3.77, 3.20
 RCUT_IEX = (RCUT_NA + RCUT_K) / 2.0
-TYPE_O, TYPE_NA, TYPE_K = 2, 4, 5
+TYPE_O, TYPE_CA, TYPE_NA, TYPE_K = 2, 3, 4, 5
 REPLICAS = (1, 2, 3)
 
 XX_CONFIG = {
@@ -92,8 +93,8 @@ def series_stats(dirpath, pat, x, center_type, rcut):
 AM_PAT = "AsMelted_723K_x{x}_r{r}_PMMCS_rc8p0.data"
 IEX_PAT = "IOX1_723K_xt{x}_r{r}_PMMCS_rc8p0.data"
 
-mean = {s: {k: np.full(len(CHI), np.nan) for k in ("na", "ka", "ki")} for s in ("cao", "noca")}
-sd = {s: {k: np.full(len(CHI), np.nan) for k in ("na", "ka", "ki")} for s in ("cao", "noca")}
+mean = {s: {k: np.full(len(CHI), np.nan) for k in ("na", "ka", "ki", "ca")} for s in ("cao", "noca")}
+sd = {s: {k: np.full(len(CHI), np.nan) for k in ("na", "ka", "ki", "ca")} for s in ("cao", "noca")}
 
 for ix, (XX, (xna_c, xka_c, xt_c, xna_n, xka_n, xt_n)) in enumerate(sorted(XX_CONFIG.items())):
     print(f"XX={XX}%...")
@@ -101,6 +102,7 @@ for ix, (XX, (xna_c, xka_c, xt_c, xna_n, xka_n, xt_n)) in enumerate(sorted(XX_CO
         ("cao", "na"):   (CAO_AM_DIR,   AM_PAT,  xna_c, TYPE_NA, RCUT_NA),
         ("cao", "ka"):   (CAO_AM_DIR,   AM_PAT,  xka_c, TYPE_K,  RCUT_K),
         ("cao", "ki"):   (CAO_IEX1_DIR, IEX_PAT, xt_c,  TYPE_K,  RCUT_IEX),
+        ("cao", "ca"):   (CAO_AM_DIR,   AM_PAT,  xka_c, TYPE_CA, RCUT_CA),
         ("noca", "na"):  (NOCA_AM_DIR,   AM_PAT,  xna_n, TYPE_NA, RCUT_NA),
         ("noca", "ka"):  (NOCA_AM_DIR,   AM_PAT,  xka_n, TYPE_K,  RCUT_K),
         ("noca", "ki"):  (NOCA_IEX1_DIR, IEX_PAT, xt_n,  TYPE_K,  RCUT_IEX),
@@ -114,16 +116,20 @@ SERIES = [
     ("na", "#1a3a5c", "o", relabel("Na (As-Melted)")),
     ("ka", "#2ca0c4", "s", relabel("K (As-Melted)")),
     ("ki", "#c0392b", "^", relabel("K (Ion-Exchanged)")),
+    ("ca", "#7b3f00", "D", relabel("Ca (As-Melted)")),
 ]
 
 fig, axes = make_fig(1, 2)
 for col, (letter, (sys_, title)) in enumerate(zip(("(a)", "(b)"), (("cao", "10CaO"), ("noca", "Ca-free")))):
     ax = axes[col]
     for key, color, marker, label in SERIES:
+        if sys_ == "noca" and key == "ca":      # Ca-free: no hay Ca
+            continue
         y, e = mean[sys_][key], sd[sys_][key]
         ok = ~np.isnan(y)
-        ax.errorbar(CHI[ok], y[ok], yerr=e[ok], color=color, marker=marker, ls="none", ms=6, mew=0.8,
-                    capsize=3, elinewidth=1.0, label=label, zorder=3)
+        big = key == "ca"      # rombo mas grande y detras: Na y Ca coinciden en varios chi
+        ax.errorbar(CHI[ok], y[ok], yerr=e[ok], color=color, marker=marker, ls="none", ms=9 if big else 6,
+                    mew=0.8, capsize=3, elinewidth=1.0, label=label, zorder=2.6 if big else 3)
         m, b = np.polyfit(CHI[ok], y[ok], 1)
         xf = np.linspace(CHI[ok].min(), CHI[ok].max(), 200)
         ax.plot(xf, m * xf + b, color=color, lw=1.4, label="_nolegend_", zorder=2)
@@ -143,7 +149,7 @@ for col, (letter, (sys_, title)) in enumerate(zip(("(a)", "(b)"), (("cao", "10Ca
         sp.set_linewidth(0.8)
 
 handles, labels = axes[0].get_legend_handles_labels()
-fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.99), ncol=3, fontsize=FS_TEXT,
+fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.99), ncol=4, fontsize=FS_TEXT,
            frameon=True, framealpha=0.9, edgecolor="#cccccc")
 fig.subplots_adjust(top=0.85, wspace=0.18)
 
@@ -153,5 +159,7 @@ fig.savefig(out.with_suffix(".png"), dpi=150, bbox_inches="tight")
 print(f"Guardado: {out.name}")
 
 for sys_ in ("cao", "noca"):
-    for key in ("na", "ka", "ki"):
+    for key in ("na", "ka", "ki", "ca"):
+        if sys_ == "noca" and key == "ca":
+            continue
         print(sys_, key, " ".join(f"{m:.2f}±{s:.2f}" for m, s in zip(mean[sys_][key], sd[sys_][key])))
