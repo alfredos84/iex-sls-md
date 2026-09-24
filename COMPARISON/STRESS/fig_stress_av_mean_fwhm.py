@@ -129,7 +129,7 @@ SI_SERIES = [(TYPE_SI, "Si", "#8e44ad", "#b07cc9")]
 O_SERIES = [(TYPE_O, "O", "#27ae60", "#5fd18d")]
 OFFSET_PT = 11.5
 XSHIFT_PT = 11.5
-LABEL_FS = FS_TEXT
+LABEL_FS = 13
 TICK_FS = FS_TEXT
 LABEL_AX_FS = FS_LABEL
 TITLE_FS = FS_LABEL
@@ -137,10 +137,11 @@ LETTER_FS = FS_TEXT
 
 # Geometria (pulgadas): cada "box" (a)-(d) es cuadrado de lado BOX;
 # fila 1 (c,d) reparte ese mismo cuadrado en dos sub-paneles (O arriba, Si abajo).
-PW = BOX
-PH = BOX
-LM, GAP_X, RM = 1.45, 0.75, 0.3
-TM, GAP_Y, BM = 1.05, 0.62, 0.95
+# Lado real de las cajas de las figuras 2x2 (fig_elastic, fig_bo_nbo): ~3.9 in
+PW = 3.9
+PH = 3.9
+LM, GAP_X, RM = 1.0, 0.6, 0.15
+TM, GAP_Y, BM = 1.05, 0.55, 0.75
 BREAK_GAP = 0.13
 W = LM + 2 * PW + GAP_X + RM
 H = TM + 2 * PH + GAP_Y + BM
@@ -237,7 +238,7 @@ for col, (sys_, title) in enumerate((("cao", relabel("10CaO")), ("noca", "Ca-fre
     style(ax, YLIM_MOD)
     ax.axhline(0, color="#aaaaaa", lw=0.8, ls=":", zorder=0)
     if col == 0:
-        fig.text((x0 - 1.05) / W, (y0 + PH / 2) / H, r"$\langle P \rangle$ (GPa)", rotation=90, ha="center",
+        fig.text((x0 - 0.75) / W, (y0 + PH / 2) / H, r"$\langle P \rangle$ (GPa)", rotation=90, ha="center",
                  va="center", fontsize=LABEL_AX_FS)
     ax.text(0.5, 0.5, title, transform=ax.transAxes, ha="center", va="center", fontsize=TITLE_FS, zorder=5)
     ax.text(0.012, 0.975, "(a)" if col == 0 else "(b)", transform=ax.transAxes, ha="left", va="top",
@@ -265,7 +266,7 @@ for col, (sys_, title) in enumerate((("cao", relabel("10CaO")), ("noca", "Ca-fre
     break_marks(ax_up, top_edge=False)
     break_marks(ax_lo, top_edge=True)
     if col == 0:
-        fig.text((x1 - 1.05) / W, (y1 + PH / 2) / H, r"$\langle P \rangle$ (GPa)", rotation=90, ha="center",
+        fig.text((x1 - 0.75) / W, (y1 + PH / 2) / H, r"$\langle P \rangle$ (GPa)", rotation=90, ha="center",
                  va="center", fontsize=LABEL_AX_FS)
     fig.text((x1 + PW / 2) / W, (y1 + PH * 0.5) / H, title, ha="center", va="center", fontsize=TITLE_FS)
     ax_up.text(0.012, 0.955, "(c)" if col == 0 else "(d)", transform=ax_up.transAxes, ha="left", va="top",

@@ -120,7 +120,7 @@ for ax, pi, ylabel, letter in zip(axes, props, ylabels, letters):
     for spine in ax.spines.values():
         spine.set_visible(True)
         spine.set_linewidth(0.8)
-    panel_letter(ax, letter)
+    panel_letter(ax, letter, x=0.03, y=0.03, va='bottom')
 
 # x label solo en fila inferior
 for ax in axes[2:]:

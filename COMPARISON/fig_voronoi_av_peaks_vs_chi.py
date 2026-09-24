@@ -103,10 +103,12 @@ for col, (letter, (sys_, title)) in enumerate(zip(letters, [("cao", "10CaO"), ("
         m, b = np.polyfit(CHI, y, 1)
         xf = np.linspace(CHI.min(), CHI.max(), 200)
         ax.plot(xf, m * xf + b, color=color, lw=1.4, label="_nolegend_", zorder=2)
-    ax.set_title(title, fontsize=FS_LABEL)
+    ax.text(0.5, 18.75, title, transform=ax.get_yaxis_transform(), ha="center", va="center",
+            fontsize=FS_LABEL, zorder=5)
     panel_letter(ax, letter)
     ax.set_xlabel(r"$\chi$ (%)", fontsize=FS_LABEL)
-    ax.set_ylabel(r"$V_\mathrm{Vor}$ peak (Å$^3$)", fontsize=FS_LABEL)
+    if col == 0:
+        ax.set_ylabel(r"$V_\mathrm{Vor}$ peak (Å$^3$)", fontsize=FS_LABEL)
     ax.set_ylim(16, 24)
     ax.xaxis.set_major_locator(ticker.MultipleLocator(20))
     ax.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
@@ -118,9 +120,11 @@ for col, (letter, (sys_, title)) in enumerate(zip(letters, [("cao", "10CaO"), ("
         spine.set_linewidth(0.8)
 
 handles, labels = axes[0].get_legend_handles_labels()
-fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 1.05), ncol=3, fontsize=FS_TEXT,
-           frameon=True, framealpha=0.9, edgecolor="#cccccc")
-fig.subplots_adjust(top=0.86, wspace=0.32)
+fig.subplots_adjust(top=0.90, wspace=0.18)
+fig.canvas.draw()
+p0, p1 = axes[0].get_position(), axes[1].get_position()
+fig.legend(handles, labels, loc="lower center", bbox_to_anchor=(0.5 * (p0.x0 + p1.x1), p0.y1 + 0.012),
+           ncol=3, fontsize=FS_TEXT, frameon=True, framealpha=0.9, edgecolor="#cccccc")
 out = HERE / "fig_voronoi_av_peaks_vs_chi.pdf"
 fig.savefig(out, dpi=300, bbox_inches="tight")
 fig.savefig(out.with_suffix(".png"), dpi=150, bbox_inches="tight")
