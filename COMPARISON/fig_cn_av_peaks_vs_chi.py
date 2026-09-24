@@ -127,8 +127,8 @@ for col, (letter, (sys_, title)) in enumerate(zip(("(a)", "(b)"), (("cao", "10Ca
             continue
         y, e = mean[sys_][key], sd[sys_][key]
         ok = ~np.isnan(y)
-        big = key == "ca"      # rombo mas grande y detras: Na y Ca coinciden en varios chi
-        ax.errorbar(CHI[ok], y[ok], yerr=e[ok], color=color, marker=marker, ls="none", ms=9 if big else 6,
+        big = key == "ca"      # Ca detras de Na (mismo tamano): coinciden en varios chi
+        ax.errorbar(CHI[ok], y[ok], yerr=e[ok], color=color, marker=marker, ls="none", ms=6,
                     mew=0.8, capsize=3, elinewidth=1.0, label=label, zorder=2.6 if big else 3)
         m, b = np.polyfit(CHI[ok], y[ok], 1)
         xf = np.linspace(CHI[ok].min(), CHI[ok].max(), 200)
