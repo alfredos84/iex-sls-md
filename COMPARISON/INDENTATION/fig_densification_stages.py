@@ -141,7 +141,7 @@ for glass, conds in CASES.items():
             masked = np.where(occ_clean, smoothed, np.nan)
             results[(glass, cond, step)] = masked
 
-vmax = 30.0
+vmax = 20.0   # simetrico sobre el maximo positivo real observado en los mapas promediados (criterio Pedone Fig.7)
 norm = TwoSlopeNorm(vmin=-vmax, vcenter=0.0, vmax=vmax)
 BG = "#053061"   # azul mas oscuro del colormap RdBu_r (extremo de la escala), como en Pedone 2026
 EXTENT = [Y_EDGES[0], Y_EDGES[-1], Z_EDGES[0], Z_EDGES[-1]]
